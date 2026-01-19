@@ -14,7 +14,7 @@ This repository contains a series of experiments developed as a requirement for 
 
 <div align="center">
 
-   ![Software Architecture](/img/dragon12.jpeg "Software Architecture")
+   ![Software Architecture](/img/dragon12.svg "Software Architecture")
 
 </div>
 
