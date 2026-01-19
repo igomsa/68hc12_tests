@@ -9,7 +9,7 @@
 
 
 ## Introduction
-This repository contains a series of experiments developed as a requirement for Microprocesors course at University of Costa Rica. For this purpose the Dragon 12 developmet board was used. 
+This repository contains a series of experiments to test the Dragon 12 evaluation board. 
 
 
 <div align="center">
