@@ -1,25 +1,25 @@
 ;***********************************************
-;                  TAREA 6
+;                  ASSIGNMENT 6
 ;***********************************************
 
 #include "../../include/registers.inc"
 
 ;***********************************************
-; REDIRECCIONAMIENTO DEL VECTOR DE INTERRUPCION
+; INTERRUPT VECTOR REDIRECTION
 ;***********************************************
-        ;; Redireccionamiento del vector de interrupción
-        ;; de convertidor analógico a digital.
+        ;; Redirection of the interrupt vector
+        ;; for the analog-to-digital converter.
         org $3E52
         dw ATD0_ISR
 
-        ;; Redireccionamiento del vector de interrupción
-        ;; de otuput compare del canal 5.
+        ;; Redirection of the interrupt vector
+        ;; for channel 5 output compare.
         org $3E64
         dw OC5_ISR
 ;***********************************************
-; 	       DECLARACION DE MEMORIA
+; 	       MEMORY DECLARATION
 ;***********************************************
-        ;; Reservación en memoria de variables requeridas
+        ;; Memory reservation for required variables
                 org $1010
 Nivel_PROM:     ds 2
 NIVEL:          ds 1
@@ -31,8 +31,8 @@ BCD_L:          ds 1
 BCD_H:          ds 1
 
 
-        ;; Mensajes a cargar.
-        ;; Estos se encuentran en ASCII.
+        ;; Messages to load.
+        ;; They are in ASCII.
 CR:     EQU $0D                 ; Carriage Return.
 NL:     EQU $0A                 ; Line feed.
 NP:     EQU $0C                 ; New page.
@@ -54,64 +54,64 @@ MSG5:   FCC "Tanque lleno, Bomba Apagada"
 
 
 ;***********************************************
-; 	     CONFIGURACION DE HARDWARE
+; 	     HARDWARE CONFIGURATION
 ;***********************************************
 
                org $2000
-        ;; Se carga el puntero de pila.
+        ;; Load the stack pointer.
         lds #$3BFF
 
-        ;; Configuración del relé.
-        bset DDRE,$04           ; PORTE.2 como salida.
-        bclr PORTE,$04          ; PORTE.2 apagado al encendido.
+        ;; Relay configuration.
+        bset DDRE,$04           ; PORTE.2 as output.
+        bclr PORTE,$04          ; PORTE.2 off at power-up.
 
-        ;; Configuración del SC1
-        movw #38,SC1BDH         ; SRB=38, para Data_Rate=8400 baudios.
+        ;; SC1 configuration
+        movw #38,SC1BDH         ; SRB=38, for Data_Rate=8400 baud.
 
-        movb #$02,SC1CR1        ; PE=1 y PT=0, para habilitar bit de
-                                ; paridad con paridad par.
+        movb #$02,SC1CR1        ; PE=1 and PT=0, to enable parity
+                                ; bit with even parity.
 
-        movb #$08,SC1CR2        ; TE=1, habilita transmisión de datos.
+        movb #$08,SC1CR2        ; TE=1, enables data transmission.
 
-        ;; Configuración del ATD
-        movb #$C2,ATD0CTL2      ; ADPU=1 para habilitar el ATD y
-                                ; AFFC=1 para
+        ;; ATD configuration
+        movb #$C2,ATD0CTL2      ; ADPU=1 to enable the ATD and
+                                ; AFFC=1 for
 
-        ;; Se deja un tiempo de espera para permitir que el
-        ;; convertidor se habilite.
+        ;; A wait time is allowed so the
+        ;; converter can enable.
         ldab #160
 DEC_B:
         dbne B,DEC_B
-        movb #$30,ATD0CTL3      ; Configura 6 conversiones en un solo
-                                ; comando.
+        movb #$30,ATD0CTL3      ; Configures 6 conversions in a single
+                                ; command.
 
-        movb #$30,ATD0CTL4      ; Configura SRES8=0 para una
-                                ; conversión a 10 bits, SMP=$00 para
-                                ; un tiempo de muestreo de 2 periodos
-                                ; de ATD y PRS=16 para una frecuencia
-                                ; de 700kHz aprox.
+        movb #$30,ATD0CTL4      ; Configures SRES8=0 for a
+                                ; 10-bit conversion, SMP=$00 for
+                                ; a sample time of 2 ATD periods,
+                                ; and PRS=16 for a frequency of
+                                ; about 700kHz.
 
-        movb #$87,ATD0CTL5      ; DJM=1 para justificar resultado a
-                                ; la derecha y CC=CB=CA=1 para definir
-                                ; al potenciómetro como la entrada de
-                                ; las mediciones.
+        movb #$87,ATD0CTL5      ; DJM=1 to right-justify the result
+                                ; and CC=CB=CA=1 to set the
+                                ; potentiometer as the input for
+                                ; the measurements.
 
 
-        ;; Configuración de OC5_ISR
-        movb #$90,TSCR1         ; Habilita TCNT y funcion de TFFCA
-        movb #$06,TSCR2         ; Prescalador de 64
-        movb #$20,TIOS          ; Habilita el IOS5
-        movb #$20,TIE           ; C5I=1 para habilitar interrupción
-                                ; por output compare del canal 5.
+        ;; OC5_ISR configuration
+        movb #$90,TSCR1         ; Enables TCNT and TFFCA function
+        movb #$06,TSCR2         ; Prescaler of 64
+        movb #$20,TIOS          ; Enables IOS5
+        movb #$20,TIE           ; C5I=1 to enable interrupt
+                                ; on channel 5 output compare.
 
-        ;; Habilitación de interrupciones
-	cli		; Carga 0 en I en CCR
+        ;; Enable interrupts
+	cli		; Load 0 into I in CCR
 
 ;***********************************************
-; 	     PROGRAMA PRINCIPAL
+; 	     MAIN PROGRAM
 ;***********************************************
-        ;; Inicialización de variables.
-        ;; Ya que no hay ningún caso especial, se inicailizan en 0.
+        ;; Variable initialization.
+        ;; Since there is no special case, they are initialized to 0.
         movw #$00,Nivel_PROM
         movb #$00,NIVEL
         movw #$0000,VOLUMEN
@@ -121,7 +121,7 @@ DEC_B:
         movb #$00,BCD_L
         movb #$00,BCD_H
 
-        ;; Se habilita la interrupción por output compare.
+        ;; Enable the output compare interrupt.
         ldd TCNT
         addd #46875
         std TC5
@@ -131,13 +131,13 @@ ESPERE:
         end
 
 ;***********************************************
-; 	             CALCULO
+; 	             CALCULATION
 ;***********************************************
 CALCULO:
-        ;; Cálculo de nivel
+        ;; Level calculation
 
-        ;; Aquí se hace una regla de 3 para convertir
-        ;; el nivel promedio de bits a metros.
+        ;; A rule of three is used here to convert
+        ;; the average level from bits to meters.
         ldd Nivel_PROM
         ldy #30
         emul                    ; Nivel_PROM * 30
@@ -146,17 +146,17 @@ CALCULO:
         tfr X,A
         sta NIVEL               ; NIVEL=(Nivel_PROM * 30)/1024
 
-        ;; Cálculo de volumen
+        ;; Volume calculation
 
-        ;; Para este paso se propone escalar los valores
-        ;; de radio y pi para trabajar con decimales.
-        ;; Con esto se logra tener precisión de 1 decimal.
+        ;; For this step the radius and pi values are scaled
+        ;; to work with decimals.
+        ;; This gives 1-decimal precision.
 
         ldd #19375              ; (2.5^2)*100 * 3.1*10
 
-        ldx #1000               ; Se divide entre 1000
-                                ; para volver a escala
-                                ; original
+        ldx #1000               ; Divide by 1000
+                                ; to return to the
+                                ; original scale
 
         idiv                    ; (r^2*pi)
         tfr X,Y
@@ -171,18 +171,18 @@ CALCULO:
 ;***********************************************
 ;          BIN_BCD
 ;***********************************************
-        ;; Subrutina de conversión de binario a BCD vista en clase.
+        ;; Binary-to-BCD conversion subroutine seen in class.
 BIN_BCD:
-        ;; Apila acumuladores e índices usados en subrutina,
-        ;; por si se usaba en otras subrutinas.
+        ;; Push accumulators and indices used in the subroutine,
+        ;; in case they were used in other subroutines.
         pshx
         psha
         pshb
 
-        ;; Aquí inicia conversión de las decenas y centenas de
-        ;; VOLUMEN.
+        ;; Conversion of the tens and hundreds of
+        ;; VOLUMEN starts here.
         ldab #$0F
-        ;; Se apila el valor de R2, ya que se usará el regitro RR1.
+        ;; R2 is pushed, since register RR1 will be used.
         pshb
         ldd 0,X
         movb #$00,BCD_L
@@ -191,7 +191,7 @@ NEXT_BIT_BCD1:
         lsld
         rol BCD_L
         rol BCD_H
-        ;; Aqui se carga RR1 a TEMP
+        ;; RR1 is loaded into TEMP here
         pshd
         ldaa BCD_L
         anda #$0F
@@ -199,7 +199,7 @@ NEXT_BIT_BCD1:
         blt NOT_5_ON_L_BCD1
         adda #$03
 NOT_5_ON_L_BCD1:
-        ;; Aqui se carga R1 a LOW
+        ;; R1 is loaded into LOW here
         psha
         ldaa BCD_L
         anda #$F0
@@ -207,18 +207,18 @@ NOT_5_ON_L_BCD1:
         blt NOT_5_ON_H_BCD1
         adda #$30
 NOT_5_ON_H_BCD1:
-        ;; Aquí se suma LOw a R1
+        ;; LOW is added to R1 here
         adda 0,SP
         sta BCD_L
-        ;; Se desapila y decrementa B, se pregunta si es 0. Si lo es,
-        ;; termina el proceso y si no, entonces se vuelve a apilar B.
+        ;; B is pulled and decremented, then tested for 0. If so,
+        ;; the process ends; otherwise B is pushed again.
         ins
         leas 2,SP
         pulb
         dbeq B,FINALIZAR_BCD1
         pshb
         leas -2,SP
-        ;; Aquí se carga TEMP a RR1
+        ;; TEMP is loaded into RR1 here
         puld
         bra NEXT_BIT_BCD1
 FINALIZAR_BCD1:
@@ -230,8 +230,8 @@ FINALIZAR_BCD1:
 
 
 
-        ;; Aquí inicia conversión de nibble más significativo
-        ;; centenas de VOLUMEN.
+        ;; Conversion of the most significant nibble,
+        ;; the hundreds of VOLUMEN, starts here.
         ldaa BCD_H
         ldab #$07
         movb #$00,BCD_L
@@ -239,7 +239,7 @@ NEXT_BIT_BCD2:
         lsla
         rol BCD_L
         rol BCD_H
-        ;; Aqui se carga R1 a TEMP
+        ;; R1 is loaded into TEMP here
         psha
         ldaa BCD_L
         anda #$0F
@@ -247,7 +247,7 @@ NEXT_BIT_BCD2:
         blt NOT_5_ON_L_BCD2
         adda #$03
 NOT_5_ON_L_BCD2:
-        ;; Aqui se carga R1 a LOw
+        ;; R1 is loaded into LOW here
         psha
         ldaa BCD_L
         anda #$F0
@@ -255,10 +255,10 @@ NOT_5_ON_L_BCD2:
         blt NOT_5_ON_H_BCD2
         adda #$30
 NOT_5_ON_H_BCD2:
-        ;; Aquí se suma LOw a R1
+        ;; LOW is added to R1 here
         adda 0,SP
         sta BCD_L
-        ;; Aquí se carga TEMP a R1
+        ;; TEMP is loaded into R1 here
         ins
         pula
         dbeq B,FINALIZAR_BCD2
@@ -270,7 +270,7 @@ FINALIZAR_BCD2:
         movb BCD_L,BCD2
 
 
-        ;; Se retornan acumuladores e índices.
+        ;; Restore accumulators and indices.
         pulb
         pula
         pulx
@@ -281,39 +281,39 @@ FINALIZAR_BCD2:
 ; 	             OC5_ISR
 ;***********************************************
 OC5_ISR:
-        ;; Se pregunta si el contador de la transmisión ya llegó a
-        ;; cero, con el fin de saber si se debe transmitir un dato.
-        ;; Los datos se transmiten cada 1s.
+        ;; Check whether the transmission counter has reached
+        ;; zero, to know whether a datum must be transmitted.
+        ;; Data is transmitted every 1s.
         tst CONT_OC
         bne DEC_CONT
 
-        ;; Se carga encabezado: "MEDICION DE VOLUMEN"
+        ;; Load header: "MEDICION DE VOLUMEN"
         ldx #MSG0
         jsr ESCRIBIR
 
-        ;; Se carga mensaje de: "VOLUMEN ACTUAL"
+        ;; Load message: "VOLUMEN ACTUAL"
         ldx #MSG1
         jsr ESCRIBIR
 
-        ;; Se convierte volumen a BCD.
+        ;; Convert volume to BCD.
         ldx #VOLUMEN
         jsr BIN_BCD
 
-        ;; Se recibe el nibble más significativo de VOLUMEN por
-        ;; memoria en la variable BCD2 y se convierte a ASCII.
+        ;; The most significant nibble of VOLUMEN is received via
+        ;; memory in BCD2 and converted to ASCII.
         ldaa BCD2
         adda #$30
 
-        ;; Se carga el nibble más significativo para ser enviado por
+        ;; Load the most significant nibble to be sent via
         ;; SCI.
         sta MSG2
         ldx #MSG2
         jsr ESCRIBIR
 
-        ;; Se recibe el nibble de las decenas y el de las unidades de
-        ;; VOLUMEN por memoria en la variable BCD1.
+        ;; The tens nibble and the units nibble of VOLUMEN
+        ;; are received via memory in BCD1.
 
-        ;; Primero se extrae el nibble de las decenas se convierte a
+        ;; First the tens nibble is extracted and converted to
         ;; ASCII.
         ldaa BCD1
         lsra
@@ -322,36 +322,36 @@ OC5_ISR:
         lsra
         adda #$30
 
-        ;; Se carga el nibble de las decenas para ser enviado por SCI.
+        ;; Load the tens nibble to be sent via SCI.
         sta MSG2
         ldx #MSG2
         jsr ESCRIBIR
 
-        ;; Se extrae el nibble de las unidades y se convierte a ASCII.
+        ;; Extract the units nibble and convert it to ASCII.
         ldaa BCD1
         anda #$0F
         adda #$30
 
 
-        ;; Se carga el nibble de las unidades para ser enviado por SCI.
+        ;; Load the units nibble to be sent via SCI.
         sta MSG3
         ldx #MSG3
         jsr ESCRIBIR
 
-        ;; Se pregunta si VOLUMEN =< 15%
+        ;; Check whether VOLUMEN =< 15%
         ldaa NIVEL
         cmpa #5
-        bgt PREGUNTAR_30        ; Si NIVEL>15%, preguntar
-                                ; si NIVEL>30%
+        bgt PREGUNTAR_30        ; If NIVEL>15%, ask
+                                ; whether NIVEL>30%
 
-        bset PORTE,$04          ; Si NIVEL=<15%, activar
-                                ; relé
+        bset PORTE,$04          ; If NIVEL=<15%, activate
+                                ; relay
 
-        ;; Se pregunta si VOLUMEN =< 30%
+        ;; Check whether VOLUMEN =< 30%
 PREGUNTAR_30:
 
-        ;; Si VOLUMEN =< 30% && RELE = ON,
-        ;; se imprime el mensaje de alarma.
+        ;; If VOLUMEN =< 30% && RELE = ON,
+        ;; the alarm message is printed.
         brclr PORTE,$04,RECARGAR_OC
         cmpa #9
         bgt PREGUNTAR_90
@@ -359,43 +359,43 @@ PREGUNTAR_30:
         jsr ESCRIBIR
         bra RECARGAR_OC
 
-        ;; Se pregunta si VOLUMEN =< 90%
+        ;; Check whether VOLUMEN =< 90%
 PREGUNTAR_90:
         cmpa #27
         blt RECARGAR_OC
 
-        ;; VOLUMEN > 90%, se imprime el mensaje de tanque lleno.
+        ;; VOLUMEN > 90%, the tank-full message is printed.
         ldx #MSG5
         jsr ESCRIBIR
-        bclr PORTE,$04          ; Si VOLUMEN > 90%, RELE = OFF.
+        bclr PORTE,$04          ; If VOLUMEN > 90%, RELE = OFF.
 
 RECARGAR_OC:
-        movb #$08,CONT_OC       ; Recarga CONT_OC.
+        movb #$08,CONT_OC       ; Reload CONT_OC.
         bra FIN_OC5
 
 DEC_CONT:
-        dec CONT_OC             ; Reduce el valor de CONT_OC.
+        dec CONT_OC             ; Reduce CONT_OC.
 
 FIN_OC5:
-        ;; Limpia las banderas de interrupción y carga el próximo
-        ;; valor a comparar en TC5.
+        ;; Clear the interrupt flags and load the next
+        ;; value to compare in TC5.
         ldd TCNT
         addd #46875
         std TC5
         rti
 
-        ;; Subrutina de escritura de datos
+        ;; Data-write subroutine
 ESCRIBIR:
-        ldaa SC1SR1             ; Se lee reg. de status.
+        ldaa SC1SR1             ; Read status register.
         ldab #$00
 RETORNO:
-        ldaa B,X                ; Carga dato en R1.
+        ldaa B,X                ; Load datum into R1.
         cmpa #EOM
-        beq FIN_ESCRIBIR        ; Si DATO=EOM, terminar.
-L1:     brclr SC1SR1,$80,L1     ; Espera a transmisión hecha.
-        sta SC1DRL              ; Carga dato para transmitir.
+        beq FIN_ESCRIBIR        ; If DATO=EOM, finish.
+L1:     brclr SC1SR1,$80,L1     ; Wait for transmission complete.
+        sta SC1DRL              ; Load datum to transmit.
 L2:     brclr SC1SR1 #$40 L2
-        incb                    ; Incrementa offset de registro.
+        incb                    ; Increment register offset.
         bra RETORNO
 FIN_ESCRIBIR:
         rts
@@ -405,8 +405,8 @@ FIN_ESCRIBIR:
 ; 	             ATD0_ISR
 ;***********************************************
 ATD0_ISR:
-        ;; Se leen las 6 conversiones y se suman todas en RR1 para
-        ;; luego determinar su promedio.
+        ;; The 6 conversions are read and all summed into RR1 to
+        ;; then determine their average.
         ldd ADR00H
         addd ADR01H
         addd ADR02H
@@ -414,14 +414,14 @@ ATD0_ISR:
         addd ADR04H
         addd ADR05H
 
-        ;; Se determina el promedio de la medición.
+        ;; Determine the average of the measurement.
         ldx #6
         idiv
-        stx Nivel_PROM          ; El promedio se guarda en Nivel_PROM.
+        stx Nivel_PROM          ; The average is stored in Nivel_PROM.
 
-        ;; Se llama a subrutina CALCULO para calcular NIVEL y VOLUMEN.
+        ;; Call CALCULO to compute NIVEL and VOLUMEN.
         jsr CALCULO
 
-        ;; Se rehabilita la interrupción por ATD.
+        ;; Re-enable the ATD interrupt.
         movb #$87,ATD0CTL5
         rti

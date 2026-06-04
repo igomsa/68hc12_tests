@@ -1,21 +1,21 @@
 ;***********************************************
-;                  TAREA #4
+;                  ASSIGNMENT #4
 ;***********************************************
 
 #include "../../include/registers.inc"
 
 ;***********************************************
-; REDIRECCIONAMIENTO DEL VECTOR DE INTERRUPCION
+; INTERRUPT VECTOR REDIRECTION
 ;***********************************************
 
-	org $3E4C               ; Vec. interrupción IRQ
+	org $3E4C               ; IRQ interrupt vector
 	dw PTH_ISR
 
-        org $3E70               ; Vec. interrupción RTI
+        org $3E70               ; RTI interrupt vector
         dw RTI_ISR
 
 ;***********************************************
-; 	       DECLARACION DE MEMORIA
+; 	       MEMORY DECLARATION
 ;***********************************************
                 org $1000
 MAX_TCL         ds 1
@@ -29,35 +29,35 @@ NUM_ARRAY       ds 6
 TECLAS          db $01, $02, $03, $04, $05, $06, $07, $08, $09, $0B, $00, $0E
 
 ;***********************************************
-; 	     CONFIGURACION DE HARDWARE
+; 	     HARDWARE CONFIGURATION
 ;***********************************************
 		org $1100
 
-	lds #$3BFF              ; Carga puntero de pila.
+	lds #$3BFF              ; Load stack pointer.
 
-        ;; Configuración del Puerto A para teclado
-	movb #$01,PUCR          ; Habilitación del resistencia de
-                                ; pull-up para puerto A.
+        ;; Port A configuration for keypad
+	movb #$01,PUCR          ; Enable pull-up resistor
+                                ; for port A.
 
-        movb #$F0,DDRA          ; PA4-7: salida
-                                ; PA0-3: entrada
+        movb #$F0,DDRA          ; PA4-7: output
+                                ; PA0-3: input
 
-        ;; Configuración de RTI_ISR
-        movb #$14, RTICTL       ; Define interrupciones de 1ms
-        bset CRGINT, #$80       ; Habilita interrupción RTI
+        ;; RTI_ISR configuration
+        movb #$14, RTICTL       ; Set 1ms interrupts
+        bset CRGINT, #$80       ; Enable RTI interrupt
 
-        ;; Configuración de PTH_ISR
-        bset DDRJ,#$03           ; PJ1 escritura
-	bclr PTJ,#$02            ; PJ1 como GND
-        bset PIEH,#$01          ; Habilita interrupción de PH0
-        bclr PPSH,#$01          ; Selección de interrupción por
-                                ; flanco decreciente
+        ;; PTH_ISR configuration
+        bset DDRJ,#$03           ; PJ1 write
+	bclr PTJ,#$02            ; PJ1 as GND
+        bset PIEH,#$01          ; Enable PH0 interrupt
+        bclr PPSH,#$01          ; Select interrupt on
+                                ; falling edge
 
 ;***********************************************
-; 	   PROGRAMA PRINCIPAL
+; 	   MAIN PROGRAM
 ;***********************************************
 
-        ;; Se inicializan las variables en cero
+        ;; Initialize the variables to zero
         movb #$06,MAX_TCL
         movb #$FF,TECLA
         movb #$FF,TECLA_IN
@@ -66,21 +66,21 @@ TECLAS          db $01, $02, $03, $04, $05, $06, $07, $08, $09, $0B, $00, $0E
         movb #$00,PATRON
         movb #$00,BANDERAS
 
-        ;; Inicialización de Arreglo
+        ;; Array initialization
         ldaa MAX_TCL
         ldx  #NUM_ARRAY
 INIT_ARR:
         movb #$FF,1,X+
         dbne A,INIT_ARR
 
-        ;; Habilitación de interrupciones
-	cli		        ; Carga 0 en I en CCR
+        ;; Enable interrupts
+	cli		        ; Load 0 into I in CCR
 
-        ;ldab #$00               ; A usar en direccionamiento
-                                ; indexado con acumulador
+        ;ldab #$00               ; To use in accumulator-offset
+                                ; indexed addressing
 ESPERE:
-        ;; Si hay Array_OK, entonces proceda a crear las secuencias de teclas
-        ;; leídas. Si no, siga esperando a TECLA_LISTA.
+        ;; If Array_OK, proceed to build the sequences of keys
+        ;; read. Otherwise, keep waiting for TECLA_LISTA.
         brclr BANDERAS,$04,TAREA_TECLADO
         bra ESPERE
         end
@@ -90,8 +90,8 @@ ESPERE:
 ;***********************************************
 TAREA_TECLADO:
 
-        tst CONT_REB                ; Si no termina proceso de
-        bne FIN_TAREA_TECLADO       ; rebote, descontar un rebote.
+        tst CONT_REB                ; If the debounce process is not
+        bne FIN_TAREA_TECLADO       ; done, count down one bounce.
 
         movb #$FF,TECLA
 
@@ -135,49 +135,49 @@ FIN_TAREA_TECLADO:
 ; 	             FORMAR_ARRAY
 ;***********************************************
 FORMAR_ARRAY:
-        ldx #NUM_ARRAY               ; Para acceder a NUM_ARRAY por direccionamiento
-        ldab CONT_TCL                ; indexado por acumulador.
+        ldx #NUM_ARRAY               ; To access NUM_ARRAY by accumulator-offset
+        ldab CONT_TCL                ; indexed addressing.
 
-        ;; Si la tecla es $0B salte a la secuencia de borrado
+        ;; If the key is $0B jump to the delete sequence
         ldaa TECLA_IN
         cmpa #$0B
         beq BORRAR
 
-        ;; Si la tecla es $0E cargue los valores a los LEDS.
+        ;; If the key is $0E load the values to the LEDS.
         cmpa #$0E
         beq ENTER
 
 CRG_TECLA:
-        cmpb #$06               ; Si la tecla a cargar es la tercera
-        bge FIN_FORM_ARRY       ; y diferente de B o E, no la cargue.
+        cmpb #$06               ; If the key to load is the third
+        bge FIN_FORM_ARRY       ; and not B or E, do not load it.
 
-        movb TECLA_IN,B,X       ; En caso cotrario, cárguela.
-        incb                    ; Cuando se carga siguiente tecla, se suma el índice.
+        movb TECLA_IN,B,X       ; Otherwise, load it.
+        incb                    ; When loading the next key, the index is added.
 
-        cmpb #$07               ; Si el índice excede el rango
-        beq REINICIAR_TCL       ; se reinicia.
+        cmpb #$07               ; If the index exceeds the range
+        beq REINICIAR_TCL       ; it is reset.
 
-        bra FIN_FORM_ARRY       ; Si no, se finaliza la secuencia.
+        bra FIN_FORM_ARRY       ; Otherwise, end the sequence.
 
 REINICIAR_TCL:
-        ;; Reinicio de VALOR y BANDERAS para aceptar nuevos valores.
+        ;; Reset VALOR and BANDERAS to accept new values.
         ldb #$00
 
 FIN_FORM_ARRY:
         stab CONT_TCL
-        movb #$FF,TECLA_IN      ; Hace TECLA=$FF
+        movb #$FF,TECLA_IN      ; Set TECLA=$FF
 
         rts
 
 BORRAR:
-        ;; Si $0B se carga a TMP1, ignorar y cargar siguiente dato.
+        ;; If $0B is loaded to TMP1, ignore and load next datum.
         tstb
         beq FIN_FORM_ARRY
         ;; cmpb #$06
         ;; beq BORRADO_ESPECIAL
 
-        ;;  Si no se cumplen las condiciones antreriores, reducir el índice para
-        ;; cargar el dato.
+        ;;  If the previous conditions are not met, reduce the index to
+        ;; load the datum.
         decb
         movb #$FF,B,X
 
@@ -190,7 +190,7 @@ BORRAR:
 ;; FINALIZAR_BORRADO
         bra FIN_FORM_ARRY
 ENTER:
-        ;; Si $0E se carga a TMP1, ignorar y cargar siguiente dato.
+        ;; If $0E is loaded to TMP1, ignore and load next datum.
         tstb
         beq FIN_FORM_ARRY
         bset BANDERAS,$04
@@ -202,55 +202,55 @@ ENTER:
 MUX_TECLADO:
 
         ldx #TECLAS
-        movb #$EF,PORTA         ; Carga el primer patrón en PORTA para leer la
-                                ; tecla.
+        movb #$EF,PORTA         ; Load the first pattern into PORTA to read the
+                                ; key.
 
-        ;movb AUX_PA,PORTA      ; Se usa una variable auxiliar pues no se sabe
-                                ; qué tendrá el PORTA dentro.
+        ;movb AUX_PA,PORTA      ; An auxiliary variable is used since it is unknown
+                                ; what PORTA will hold inside.
 
-        movb #$00,PATRON        ; Se usa una variable para contabilizar la
-                                ; cantidad de patrones escritos en PORTA.
+        movb #$00,PATRON        ; A variable is used to count the
+                                ; number of patterns written to PORTA.
 
 SIG_PATRN:
-        ldab #$03               ; Se usa acumulador B para hacer el indexado al
-                                ; arreglo.
+        ldab #$03               ; Accumulator B is used to index the
+                                ; array.
 
-        ldaa PATRON             ; Si ya se escribió $EF, $DF, $BF, $7F en PORTA,
-        cmpa #$04               ; ponga finalice la subrutina.
+        ldaa PATRON             ; If $EF, $DF, $BF, $7F were already written to PORTA,
+        cmpa #$04               ; end the subroutine.
         beq FIN_MUX_TECLADO
-        mul                     ; Si no, haga D <- A*B para indexar el arreglo
-                                ; de valores a cargar.
+        mul                     ; Otherwise, do D <- A*B to index the array
+                                ; of values to load.
 
-        brclr PORTA,$01,LEER    ; Si se presionó un botón en la primera columna
-                                ; no le sume nada al offset.
+        brclr PORTA,$01,LEER    ; If a button in the first column was pressed,
+                                ; add nothing to the offset.
 
-        brclr PORTA,$02,A_1     ; Si se presionó un botón en la segunda columna
-                                ; sume 1 al offset.
+        brclr PORTA,$02,A_1     ; If a button in the second column was pressed,
+                                ; add 1 to the offset.
 
-        brclr PORTA,$04,A_2     ; Si se presionó un botón en la tercera columna
-                                ; sume 2 al offset.
+        brclr PORTA,$04,A_2     ; If a button in the third column was pressed,
+                                ; add 2 to the offset.
 CRGR_SGNT_PATRN:
 
-        ;; Si el patrón previo no generó una tecla presionada, incremente PATRON
-        ;; y rote el valor cargado en el puerto A.
+        ;; If the previous pattern produced no key press, increment PATRON
+        ;; and rotate the value loaded in port A.
         inc PATRON
-        sec                     ; Ya que se rotará el puerto A, se requiere que
-                                ; C esté en 1.
+        sec                     ; Since port A will be rotated, C is required
+                                ; to be 1.
         rol PORTA
         ;movb AUX_PA, PORTA
         bra SIG_PATRN
 
-        ;; Caso de botón en primera columna.
+        ;; Case of button in first column.
 A_1:
         incb
         bra LEER
 
-        ;; Caso de botón en segunda columna.
+        ;; Case of button in second column.
 A_2:
         addb #$02
 
 LEER:
-        ;; Trasdala el valor correspondiente a TECLA.
+        ;; Move the corresponding value into TECLA.
         movb B,X,TECLA
 
 FIN_MUX_TECLADO:
@@ -263,23 +263,23 @@ FIN_MUX_TECLADO:
 PTH_ISR:
         bclr BANDERAS,$04
 
-        ;; Inicialización de Arreglo
+        ;; Array initialization
         ldaa MAX_TCL
         ldx  #NUM_ARRAY
 INIT_ARR1:
         movb #$FF,1,X+
         dbne A,INIT_ARR1
-        bset PIFH, $01          ; Limpia la interrupción.
+        bset PIFH, $01          ; Clear the interrupt.
         rti
 
 ;***********************************************
 ; 	             RTI_ISR
 ;***********************************************
 RTI_ISR:
-        ;; Reduce el valor de CONT_REB si este es diferente de cero.
+        ;; Reduce CONT_REB if it is nonzero.
         tst CONT_REB
         beq RETORNAR
         dec CONT_REB
 RETORNAR:
-        bset crgflg, #$80       ; Se rehabilita la interrupción
+        bset crgflg, #$80       ; Re-enable the interrupt
         rti

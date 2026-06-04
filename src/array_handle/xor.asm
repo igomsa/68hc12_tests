@@ -1,28 +1,28 @@
 ; ******************************************************************************
-        ;; Tarea 2: Problema 2
+        ;; Assignment 2: Problem 2
 ; ******************************************************************************
 
 ; ******************************************************************************
-        ;; Este programa realiza una XOR con el contenido de dos tablas,
-        ;; una que se encuentra en la posición DATOS, la cual contiene
-        ;; números, y la otra en la posición MASCARAS, la cual contiene máscaras.
+        ;; This program XORs the contents of two tables,
+        ;; one at position DATOS, which holds
+        ;; numbers, and the other at position MASCARAS, which holds masks.
 
-        ;; Se realiza la XOR del último número en DATOS con la primera máscara,
-        ;; hasta que una de ella se acabe.
+        ;; The last DATOS number is XORed with the first mask,
+        ;; until one of them runs out.
 
-        ;; El resultado de las XOR se guarda en la posción de memoria NEGAT,
-        ;; siempre y cuando el resultado de la operación sea negativo.
+        ;; The XOR result is stored at memory location NEGAT,
+        ;; provided the operation result is negative.
 
-        ;; El último elemento de DATOS es $$FF,
-        ;; mientras que el último elemento en MASCARAS es $$FE.
+        ;; The last element of DATOS is $$FF,
+        ;; while the last element of MASCARAS is $$FE.
 ; ******************************************************************************
 
 ; ******************************************************************************
-        ;; DECLARACIÓN DE ESTRUCTURAS DE DATOS
-        ;; DATOS: Posición de memoria que contiene una tabla con números son signo.
-        ;; MASCARAS: Posición de memoria que contiene una tabla con máscaras.
-        ;; NEGAT: Posición de memoria que contiene una tabla con el resultado
-        ;; XOR de los números de DATOS con MASCARAS y que son negativos.
+        ;; DATA STRUCTURE DECLARATION
+        ;; DATOS: Memory location holding a table of signed numbers.
+        ;; MASCARAS: Memory location holding a table of masks.
+        ;; NEGAT: Memory location holding a table of the XOR results
+        ;; of the DATOS numbers with MASCARAS that are negative.
 ; ******************************************************************************
 
         org $1050
@@ -37,37 +37,37 @@ MASCARAS:   fcb -03, -122, -21, -118, -113, -88, -43, -25, -101, 254
 NEGAT: ds 1
 
 ; ******************************************************************************
-        ;; INICIO DEL PROGRAMA
+        ;; PROGRAM START
 ; ******************************************************************************
         org $2000
 
-        lds #$3BFF              ; Carga puntero de pila.
+        lds #$3BFF              ; Load stack pointer.
 
-        ;; Se cargan las direcciones de las tablas en los índices.
+        ;; Load the table addresses into the index registers.
         ldx #DATOS              ; X <-- DATOS
         ldy #NEGAT             ; Y <-- NEGAT
-        pshy                    ; Ya que Y se usa tanto para barrer las tablas
-                                ; como para generar NEGAT, la variación
-                                ; "entorno" se maneja con la pila.
+        pshy                    ; Since Y is used both to scan the tables
+                                ; and to generate NEGAT, the "context"
+                                ; switch is handled with the stack.
         ldy #MASCARAS               ; Y <-- MASCARAS
 
 
-        ;; Ya que no se sabe el tamaño de DATOS, se busca un $FF en la tabla
-        ;; para delimitar su final.
+        ;; Since the size of DATOS is unknown, an $FF is searched in the table
+        ;; to mark its end.
 BUSCAR_$FF:
-        ldaa 0,X                ; El registro A tiene el contenido de la
-                                ; posición apuntada por X.
+        ldaa 0,X                ; Register A holds the contents of the
+                                ; position pointed to by X.
         cmpa #$FF
         beq SI_$FF
 
-        ;; Si el valor de A no es $$FF, se incrementa X en uno y se sigue
-        ;; buscando.
+        ;; If A is not $$FF, X is incremented by one and the search
+        ;; continues.
 NO_$FF:
         inx
         bra BUSCAR_$FF
 
-        ;; Si se llegó al final de la tabla, se termina el programa si el único
-        ;; elemento de DATOS es $$FF, o si el único elemento de MASCARAS es $$FE.
+        ;; If the end of the table is reached, the program ends if the only
+        ;; DATOS element is $$FF, or if the only MASCARAS element is $$FE.
 SI_$FF:
         cpx #DATOS
         beq FINAL
@@ -75,8 +75,8 @@ SI_$FF:
         cmpa #$FE
         beq FINAL
 
-        ;; Si DATOS y MASCARAS no están vacíos, se reduce X en uno y se hace
-        ;; la XOR de los valores de DATOS con los de MASCARAS en orden inverso.
+        ;; If DATOS and MASCARAS are not empty, X is reduced by one and the
+        ;; DATOS values are XORed with the MASCARAS values in reverse order.
 SIGUIENTE:
         dex
         ldaa 0,X
@@ -84,26 +84,26 @@ SIGUIENTE:
         tsta
         blt NEGATIVO
 
-        ;; Si el resultado de la XOR es positivo, se procede con la siguiente
-        ;; máscara.
+        ;; If the XOR result is positive, proceed with the next
+        ;; mask.
 CONTINUE:
         iny
         bra SI_$FF
 
-        ;; Si el resultado de la XOR es negativo, se guarda en NEGAT.
-        ;; Ya que el índice Y se había estado usando para recorrer MASCARAS,
-        ;; se cambia de "entorno" apilando el actual valor de Y, y desapilando
-        ;; el valor pasado (posición de NEGAT).
+        ;; If the XOR result is negative, it is stored in NEGAT.
+        ;; Since index Y had been used to scan MASCARAS,
+        ;; the "context" is switched by pushing the current Y and pulling
+        ;; the previous value (NEGAT position).
 NEGATIVO:
         pshy
         leas 2,SP
         puly
-        staa 1,Y+               ; Esta operación incrementa el puntero a NEGAT.
+        staa 1,Y+               ; This operation increments the NEGAT pointer.
         pshy
         leas -2,SP
         puly
         bra CONTINUE
 
-        ;; Fin del programa
+        ;; End of program
 FINAL:
         bra *

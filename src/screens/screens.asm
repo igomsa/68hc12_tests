@@ -1,24 +1,24 @@
 ;***********************************************
-;                  TAREA #5
+;                  ASSIGNMENT #5
 ;***********************************************
 
 #include "../../include/registers.inc"
 
 
 ;***********************************************
-; REDIRECCIONAMIENTO DEL VECTOR DE INTERRUPCION
+; INTERRUPT VECTOR REDIRECTION
 ;***********************************************
 
 
-        org $3E6A               ; Vec. interrupcón por Comparador.
+        org $3E6A               ; Comparator interrupt vector.
         dw OC2_ISR
 
-        org $3E70               ; Vec. interrupción RTI
+        org $3E70               ; RTI interrupt vector
         dw RTI_ISR
 
 
 ;***********************************************
-; 	       DECLARACION DE MEMORIA
+; 	       MEMORY DECLARATION
 ;***********************************************
 
 		org $1000
@@ -50,7 +50,7 @@ ADD_L2                  ds 1
 SEGMENT                 db $3F,$06,$5B,$4F,$66,$6D,$7D,$07,$7F,$6F,$0A
 
 ;***********************************************
-; 	     INICIO DE MENSAJES
+; 	     MESSAGES START
 ;***********************************************
 iniDsp:                 db $04
 FUNCTION_SET1:          db $28
@@ -69,48 +69,48 @@ Msg_L2: FCC "MAN_CONT=UP"
 Msg_L3: FCC "MAN_CONT=DOWN"
         db EOM
 ;***********************************************
-; 	     CONFIGURACION DE HARDWARE
+; 	     HARDWARE CONFIGURATION
 ;***********************************************
 
 		org $2000
 
-	lds #$3BFF               ; Carga puntero de pila.
+	lds #$3BFF               ; Load stack pointer.
 
-        ;; Configuración de LEDS
-	movb #$FF,DDRB           ; Puerto B: escritura
-        bset DDRJ,#$03           ; PJ1 escritura
-	bclr PTJ,#$02            ; PJ1 como GND
-        movb #$FF,DDRP           ; PORTJ: Entrada
+        ;; LEDS configuration
+	movb #$FF,DDRB           ; Port B: write
+        bset DDRJ,#$03           ; PJ1 write
+	bclr PTJ,#$02            ; PJ1 as GND
+        movb #$FF,DDRP           ; PORTJ: Input
 
 
-	movb #$FF,PORTB         ; LEDS encendidos inicialmente
+	movb #$FF,PORTB         ; LEDS on initially
 
-        ;; Configuración de PK para LCD
+        ;; PK configuration for LCD
         movb #$FF,DDRK
 
-        ;; Configuación de RTI_ISR
-        movb #$25,RTICTL       ; Define interrupciones de 1ms
-        bset CRGINT,#$80       ; Para habilitar interrupción RTI
+        ;; RTI_ISR configuration
+        movb #$25,RTICTL       ; Set 1ms interrupts
+        bset CRGINT,#$80       ; To enable RTI interrupt
 
-        ;; Configuración de PTH_ISR
-        bset PIEH,#$0D          ; Habilita interrupción de PH(3,2,0)
-        bclr PPSH,#$0D          ; Selección de interrupción por
-                                ; flanco decreciente
+        ;; PTH_ISR configuration
+        bset PIEH,#$0D          ; Enable PH(3,2,0) interrupt
+        bclr PPSH,#$0D          ; Select interrupt on
+                                ; falling edge
 
-        ;; Configuración de OC2_ISR
-        movb #$90,TSCR1         ; Habilita TCNT y funcion de TFFCA
-        movb #$03,TSCR2         ; Prescalador de 8
-        movb #$04,TIOS          ; Habilita el IOS2
-        movb #$10,TCTL2         ; Canal 2 como Toggle
-        movb #$04,TIE           ; Habilita TC2
+        ;; OC2_ISR configuration
+        movb #$90,TSCR1         ; Enable TCNT and TFFCA function
+        movb #$03,TSCR2         ; Prescaler of 8
+        movb #$04,TIOS          ; Enable IOS2
+        movb #$10,TCTL2         ; Channel 2 as Toggle
+        movb #$04,TIE           ; Enable TC2
 
 
 ;***********************************************
-; 	   INICIALIZACIÓN_DE_VARIABLES
+; 	   VARIABLE_INITIALIZATION
 ;***********************************************
         movb #$00,LOW
         movb #$00,BANDERAS      ; X:X:X:X:X:X:CARGAR_LCD:DIRECCION_LEDS
-        movb #250,CONT_RTI      ; Para contar 0.25 s en RTI_ISR
+        movb #250,CONT_RTI      ; To count 0.25 s in RTI_ISR
         movb #$00,CONT_MAN
         movb #$00,CONT_FREE
         movb #$01,LEDS
@@ -136,13 +136,13 @@ Msg_L3: FCC "MAN_CONT=DOWN"
 
 	cli		        ; Carga 0 en I en CCR
 
-        ;; Para generar ticks de 50 KHz.
+        ;; To generate 50 KHz ticks.
         ldd TCNT
         addd #60
         std TC2
 
 ;***********************************************
-; 	   PROGRAMA PRINCIPAL
+; 	   MAIN PROGRAM
 ;***********************************************
 
         brset PTIH,#$80,CONT_FREE_DES_ON
@@ -151,10 +151,10 @@ Msg_L3: FCC "MAN_CONT=DOWN"
 
 
 ESPERE:
-        jsr BIN_BCD             ; Se convierte siempre de BIN a BCD
+        jsr BIN_BCD             ; Always convert from BIN to BCD
 
-        ;; Si la bandera de cargar mensaje está habilitada, actualice la LCD.
-        ;; Sino, convierta a BCD.
+        ;; If the load-message flag is enabled, update the LCD.
+        ;; Otherwise, convert to BCD.
         brclr BANDERAS,$02,ESPERE
         jsr MSG_LCD
         jsr CARGAR_LCD
@@ -236,37 +236,37 @@ FIN_MODO_RUN:
 ; 	   RTI_ISR
 ;***********************************************
 RTI_ISR:
-        ;; Cuando han pasado 0.25s se varía LEDS y CONT_FREE
+        ;; After 0.25s have elapsed, LEDS and CONT_FREE are varied
         dec CONT_RTI
         tst CONT_RTI
         bne FIN_RTI_ISR
         movb #250,CONT_RTI
 
-        ;; Si PTIH.7 es 0, la cuenta es ascendente.
+        ;; If PTIH.7 is 0, the count is ascending.
         brclr PTIH,#$80,CONT_FREE_ASC
 
-        ;; Sino, es descendente.
+        ;; Otherwise, it is descending.
 CONT_FREE_DEC:
         bset BANDERAS,$02
 
         lda CONT_FREE
-        jsr CUENTA_DECRECIENTE  ;Subrutina de manejo de cuenta decreciente
+        jsr CUENTA_DECRECIENTE  ;Down-count handling subroutine
         sta CONT_FREE
         bra VARIAR_LEDS
 
-        ;; Manejo de cuenta ascendente del FREE COUNTER.
+        ;; Ascending count handling for the FREE COUNTER.
 CONT_FREE_ASC:
         bset BANDERAS,$02
 
         lda CONT_FREE
-        jsr CUENTA_CRECIENTE    ;Subrutina de manejo de cuenta creciente
+        jsr CUENTA_CRECIENTE    ;Up-count handling subroutine
         sta CONT_FREE
 
 VARIAR_LEDS:
-        ;; Si la bandera de LEDS es 0, el movimiento es DER->IZQ
+        ;; If the LEDS flag is 0, the motion is RIGHT->LEFT
         brclr BANDERAS,$01,LEDS_DER_IZQ
 
-        ;; Sino, es IZQ->DER
+        ;; Otherwise, it is LEFT->RIGHT
 LEDS_IZQ_DER:
         movb LEDS,PORTB
         lsr LEDS
@@ -274,7 +274,7 @@ LEDS_IZQ_DER:
         bclr BANDERAS,$01
         bra FIN_RTI_ISR
 
-        ;; Cargar LEDS DER->IZQ
+        ;; Load LEDS RIGHT->LEFT
 LEDS_DER_IZQ:
         movb LEDS,PORTB
         lsl LEDS
@@ -282,7 +282,7 @@ LEDS_DER_IZQ:
         bset BANDERAS,$01
 
 FIN_RTI_ISR:
-        bset crgflg, #$80       ; Se limpia la interrupción
+        bset crgflg, #$80       ; Clear the interrupt
         rti
 
 ;***********************************************
@@ -290,12 +290,12 @@ FIN_RTI_ISR:
 ;***********************************************
 PTH_ISR:
 
-        brclr PIFH,#$01,ESTADO_POT ; Identifica interrupción por brillo.
+        brclr PIFH,#$01,ESTADO_POT ; Identify the brightness interrupt.
 
-        ;; Si PTIH.6 es 0, la cuenta manual es ascendente.
+        ;; If PTIH.6 is 0, the manual count is ascending.
         brclr PTIH,#$40,CONT_MAN_ASC
 
-        ;; Sino, es descendente.
+        ;; Otherwise, it is descending.
 CONT_MAN_DEC:
         bset BANDERAS,$02
 
@@ -304,7 +304,7 @@ CONT_MAN_DEC:
         sta CONT_MAN
         bra ESTADO_POT
 
-        ;; Manejo de cuenta ascendente del MAN COUNTER.
+        ;; Ascending count handling for the MAN COUNTER.
 CONT_MAN_ASC:
         bset BANDERAS,$02
 
@@ -313,7 +313,7 @@ CONT_MAN_ASC:
         sta CONT_MAN
         bra ESTADO_POT
 
-        ;; Manejo de aumento o decremento de brillo.
+        ;; Brightness increase/decrease handling.
 ESTADO_POT:
         brset PIFH,#$04,REDUCIR_POT
         brset PIFH,#$08,AUMENTAR_POT
@@ -325,8 +325,8 @@ REDUCIR_POT:
         sta POT
         tsta
         bge SALIR_PTH
-        movb #$64,POT        ; Si se llega a lo mínimo y se decrementa el
-                                ; brillo, va al máximo.
+        movb #$64,POT        ; If minimum is reached and brightness
+                                ; is decremented, it goes to maximum.
         bra SALIR_PTH
 
 AUMENTAR_POT:
@@ -335,17 +335,17 @@ AUMENTAR_POT:
         sta POT
         cmpa #$64
         ble SALIR_PTH
-        movb #$00,POT ; Si se llega al tope, el brillo vuelve a cero.
+        movb #$00,POT ; If the top is reached, brightness returns to zero.
 SALIR_PTH:
-        bset PIFH, $0D          ; Limpia la interrupción.
+        bset PIFH, $0D          ; Clear the interrupt.
         rti
 
 ;***********************************************
-;          MANEJO DE CARGA DE MENSAJE A LCD
+;          LCD MESSAGE LOAD HANDLING
 ;***********************************************
 MSG_LCD:
-        ;; Si PTIH.7 es 0, la cuenta free es ascendente y
-        ;; por tanto se carga el mensaje respectivo.
+        ;; If PTIH.7 is 0, the free count is ascending and
+        ;; therefore the respective message is loaded.
         brset PTIH,#$80,CONT_FREE_DES_ON
         brclr BANDERAS,$04,NO_PRIMER_UP_FREE
         jsr INICIALIZAR_LCD
@@ -372,7 +372,7 @@ CARGAR_MSG:
 
 
 ;***********************************************
-;          MANEJO DE CUENTA CRECIENTE Y DECRECIENTE
+;          UP/DOWN COUNT HANDLING
 ;***********************************************
 CUENTA_DECRECIENTE:
         deca
@@ -395,8 +395,8 @@ RET_CUENTA_CREC:
 ;          BIN_BCD
 ;***********************************************
 BIN_BCD:
-        ;; Apila acumuladores e índices usados en subrutina,
-        ;; por si se usaba en otras subrutinas.
+        ;; Push accumulators and indices used in the subroutine,
+        ;; in case they were used in other subroutines.
         pshx
         psha
         pshb
@@ -404,11 +404,11 @@ BIN_BCD:
         ldaa CONT_MAN
         ldab #$07
         movb #$00,LOW
-        ;; Aquí inicia conversión de CONT_FREE
+        ;; Conversion of CONT_FREE starts here
 NEXT_BIT_BCD1:
         lsla
         rol LOW
-        ;; Aqui se carga R1 a TEMP
+        ;; R1 is loaded into TEMP here
         psha
         ldaa LOW
         anda #$0F
@@ -416,7 +416,7 @@ NEXT_BIT_BCD1:
         blt NOT_5_ON_L_BCD1
         adda #$03
 NOT_5_ON_L_BCD1:
-        ;; Aqui se carga R1 a LOW
+        ;; R1 is loaded into LOW here
         psha
         ldaa LOW
         anda #$F0
@@ -424,10 +424,10 @@ NOT_5_ON_L_BCD1:
         blt NOT_5_ON_H_BCD1
         adda #$30
 NOT_5_ON_H_BCD1:
-        ;; Aquí se suma LOW a R1
+        ;; LOW is added to R1 here
         adda 0,SP
         sta LOW
-        ;; Aquí se carga TEMP a R1
+        ;; TEMP is loaded into R1 here
         ins
         pula
         dbeq B,FINALIZAR_BCD1
@@ -437,14 +437,14 @@ FINALIZAR_BCD1:
         rol LOW
         movb LOW,BCD1
 
-        ;; Aquí inicia conversión de CONT_FREE
+        ;; Conversion of CONT_FREE starts here
         ldaa CONT_FREE
         ldab #$07
         movb #$00,LOW
 NEXT_BIT_BCD2:
         lsla
         rol LOW
-        ;; Aqui se carga R1 a TEMP
+        ;; R1 is loaded into TEMP here
         psha
         ldaa LOW
         anda #$0F
@@ -452,7 +452,7 @@ NEXT_BIT_BCD2:
         blt NOT_5_ON_L_BCD2
         adda #$03
 NOT_5_ON_L_BCD2:
-        ;; Aqui se carga R1 a LOW
+        ;; R1 is loaded into LOW here
         psha
         ldaa LOW
         anda #$F0
@@ -460,10 +460,10 @@ NOT_5_ON_L_BCD2:
         blt NOT_5_ON_H_BCD2
         adda #$30
 NOT_5_ON_H_BCD2:
-        ;; Aquí se suma LOW a R1
+        ;; LOW is added to R1 here
         adda 0,SP
         sta LOW
-        ;; Aquí se carga TEMP a R1
+        ;; TEMP is loaded into R1 here
         ins
         pula
         dbeq B,FINALIZAR_BCD2
@@ -473,7 +473,7 @@ FINALIZAR_BCD2:
         rol LOW
         movb LOW,BCD2
 
-        ;; Se retornan acumuladores e índices.
+        ;; Restore accumulators and indices.
         pulb
         pula
         pulx
@@ -483,28 +483,28 @@ FINALIZAR_BCD2:
 ;          BCD_7SEG
 ;***********************************************
 BCD_7SEG:
-        ;; Apila acumuladores e índices usados en subrutina,
-        ;; por si se usaba en otras subrutinas.
+        ;; Push accumulators and indices used in the subroutine,
+        ;; in case they were used in other subroutines.
         pshx
         psha
 
         ldx #SEGMENT
-        ;; Prepara DIG3
+        ;; Prepare DIG3
         ldaa BCD2
         anda #$0F
         psha
-        ;; Prepara DIG4
+        ;; Prepare DIG4
         ldaa BCD1
         anda #$0F
         psha
-        ;; Prepara DIG2
+        ;; Prepare DIG2
         ldaa BCD2
         lsra
         lsra
         lsra
         lsra
         psha
-        ;; Prepara DIG4
+        ;; Prepare DIG4
         ldaa BCD1
         lsra
         lsra
@@ -512,7 +512,7 @@ BCD_7SEG:
         lsra
         psha
 
-        ;; Carga los valores de los dígitos
+        ;; Load the digit values
         pula
         movb A,X,DIG2
         pula
@@ -522,7 +522,7 @@ BCD_7SEG:
         pula
         movb A,X,DIG3
 
-        ;; Se retornan acumuladores e índices.
+        ;; Restore accumulators and indices.
         pula
         pulx
         rts
@@ -531,18 +531,18 @@ BCD_7SEG:
 ;          OC2_ISR
 ;***********************************************
 OC2_ISR:
-        ;; Cuenta para refrescar valor de dígitos.
+        ;; Counter to refresh the digit value.
         ldd CONT_7SEG
         addd #$01
         std CONT_7SEG
 
-        ;; Cuenta para control por ciclo de trabajo.
+        ;; Counter for duty-cycle control.
         dec CONT_TICKS
         tst CONT_TICKS
         ble CERO
         ldaa CONT_TICKS
 
-        ;; Determina el ancho de pulso habilitación de leds.
+        ;; Determine the LED enable pulse width.
         ldab #100
         subb POT
         stb DT
@@ -552,17 +552,17 @@ OC2_ISR:
         cpd #5000
         lbne FIN_OC2_ISR
         movw #$0000,CONT_7SEG
-        jsr BCD_7SEG            ;Convierte variables BCD a 7 segmentos.
+        jsr BCD_7SEG            ;Convert BCD variables to 7 segments.
         bra FIN_OC2_ISR
 
-        ;; Manejo de habilitación de LEDS.
+        ;; LEDS enable handling.
 HAB_LED:
         movb #$FF,PTP
         bclr PTJ,#$03
         movb LEDS,PORTB
         bra FIN_OC2_ISR
 
-        ;; Manejo de habilitación de DIGITOS.
+        ;; DIGIT enable handling.
 CERO:
         movb #100,CONT_TICKS
         inc CONT_DIG
@@ -571,7 +571,7 @@ CERO:
         brset CONT_DIG,#$02,HAB_DIG3
         brset CONT_DIG,#$01,HAB_DIG2
 
-        ;; Habilita dígito 1
+        ;; Enable digit 1
 HAB_DIG1:
         tst CONT_DIG
         beq LOAD_DIG1
@@ -581,7 +581,7 @@ LOAD_DIG1:
         movb DIG1,PORTB
         bra FIN_OC2_ISR
 
-        ;; Habilita dígito 2
+        ;; Enable digit 2
 HAB_DIG2:
         ldaa DIG2
         cmpa #$3F
@@ -591,14 +591,14 @@ LOAD_DIG2:
         movb DIG2,PORTB
         bra FIN_OC2_ISR
 
-        ;; Habilita dígito 3
+        ;; Enable digit 3
 HAB_DIG3:
         movb #$0D,PTP
 LOAD_DIG3:
         movb DIG3,PORTB
         bra FIN_OC2_ISR
 
-        ;; Habilita dígito 4
+        ;; Enable digit 4
 HAB_DIG4:
         ldaa DIG4
         cmpa #$3F
@@ -609,7 +609,7 @@ LOAD_DIG4:
         bra FIN_OC2_ISR
 
 FIN_OC2_ISR:
-        ;; Manejor de Cont_Delay para LCD
+        ;; Cont_Delay handling for LCD
         tst Cont_Delay
         beq CARGAR_TC2
         dec Cont_Delay
@@ -632,7 +632,7 @@ INICIALIZAR_LCD:
         ldx #iniDsp
 SEGUIR_IniDSP:
         ldaa 0,X
-        jsr SEND_COMMAND        ;De iniDsp
+        jsr SEND_COMMAND        ;From iniDsp
         movb D40uS,Cont_Delay
         jsr Delay               ;40us
         inx
@@ -640,7 +640,7 @@ SEGUIR_IniDSP:
         cpx #iniDsp+4
         bne SEGUIR_IniDSP
         ldaa #$01
-        jsr SEND_COMMAND        ;De Clear Display
+        jsr SEND_COMMAND        ;From Clear Display
         movb D2mS,Cont_Delay
         jsr Delay               ;2ms
 
@@ -671,7 +671,7 @@ LOAD_MSG1:
         ldaa 1,X+
         cmpa #EOM
         beq IS_EOM_MSG1
-        jsr SEND_DATA        ;Char de Msg_L1
+        jsr SEND_DATA        ;Msg_L1 char
         movb D40uS,Cont_Delay
         jsr Delay               ;40us
         bra LOAD_MSG1
@@ -684,7 +684,7 @@ LOAD_MSG2:
         ldaa 1,Y+
         cmpa #EOM
         beq IS_EOM_MSG2
-        jsr SEND_DATA        ;Char de Msg_L2
+        jsr SEND_DATA        ;Msg_L2 char
         movb D40uS,Cont_Delay
         jsr Delay               ;40us
         bra LOAD_MSG2

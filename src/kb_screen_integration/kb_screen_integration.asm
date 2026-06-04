@@ -1,30 +1,30 @@
 ;***********************************************
-;                  Proyecto Micros
+;                  Micros Project
 ;***********************************************
 
 #include "../../include/registers.inc"
 
 ;***********************************************
-; REDIRECCIONAMIENTO DEL VECTOR DE INTERRUPCION
+; INTERRUPT VECTOR REDIRECTION
 ;***********************************************
 
-	org $3E4C               ; Vec. interrupción PTH.
+	org $3E4C               ; PTH interrupt vector.
 	dw CALCULAR
 
-        org $3E52               ; Vec. interrupción ATD.
+        org $3E52               ; ATD interrupt vector.
         dw ATD_ISR
 
-        org $3E5E               ; Vec. interrupción TCNT overflow.
+        org $3E5E               ; TCNT overflow interrupt vector.
         dw TCNT_ISR
 
-        org $3E66               ; Vec. interrupcón Comparador Ch4.
+        org $3E66               ; Comparator Ch4 interrupt vector.
         dw OC4_ISR
 
-        org $3E70               ; Vec. interrupción RTI.
+        org $3E70               ; RTI interrupt vector.
         dw RTI_ISR
 
 ;***********************************************
-; 	       DECLARACION DE MEMORIA
+; 	       MEMORY DECLARATION
 ;***********************************************
 		org $1000
 
@@ -102,14 +102,14 @@ VAR             ds 1
 TECLAS          db $01, $02, $03, $04, $05, $06, $07, $08, $09, $0B, $00, $0E
 SEGMENT         db $3F, $06, $5B, $4F, $66, $6D, $7D, $07, $7F, $6F, $0A
 
-;*********** INICIALIZACIÓN DE LCD ***********
+;*********** LCD INITIALIZATION ***********
 iniDsp          db $04
 FUNCTION_SET1   db $28
 FUNCTION_SET2   db $28
 ENTRY_MODE      db $06
 DISPLAY_ON_OFF  db $01
 
-;*********** INICIO DE MENSAJES ***********
+;*********** MESSAGES START ***********
 Inicio_de_mensajes:     ds 1
 EOM:    EQU $04
 MSG0: FCC "  RADAR  623"       ;LIBRE | COMP X2
@@ -130,49 +130,49 @@ MSG8: FCC "  ESPERANDO..."
        db EOM
 
 ;***********************************************
-; 	     CONFIGURACION DE HARDWARE
+; 	     HARDWARE CONFIGURATION
 ;***********************************************
 		org $2000
 
-	lds #$3BFF               ; Carga puntero de pila.
+	lds #$3BFF               ; Load stack pointer.
 
-        ;; Configuración de LEDS
-	movb #$FF,DDRB          ; PB: escritura
-        bset DDRJ,#$02          ; PJ1 escritura
-	bclr PTJ,#$02           ; PJ1 como GND
+        ;; LEDS configuration
+	movb #$FF,DDRB          ; PB: write
+        bset DDRJ,#$02          ; PJ1 write
+	bclr PTJ,#$02           ; PJ1 as GND
 
-        movb #$FF,DDRP         ; PP: escritura
-        movb #$0F,PTP          ; 7 seg desab.
-	movb #$00,PORTB         ; LEDS apagados inicialmente
+        movb #$FF,DDRP         ; PP: write
+        movb #$0F,PTP          ; 7 seg disabled.
+	movb #$00,PORTB         ; LEDS off initially
 
-        ;; Configuración Teclado.
-        movb #$01,PUCR          ; Habilita resistencias pull-up de PA
-        movb #$F0,DDRA          ; PA4-7: salida
-                                ; PA0-3: entrada
+        ;; Keypad configuration.
+        movb #$01,PUCR          ; Enable PA pull-up resistors
+        movb #$F0,DDRA          ; PA4-7: output
+                                ; PA0-3: input
 
-        ;; Configuración de PK para LCD
+        ;; PK configuration for LCD
         movb #$FF,DDRK
 
-        ;; ;; Configuación de RTI_ISR
-        movb #$23,RTICTL       ; Define interrupciones de 1ms
-        bset CRGINT,#$80       ; Para habilitar interrupción RTI
+        ;; ;; RTI_ISR configuration
+        movb #$23,RTICTL       ; Set 1ms interrupts
+        bset CRGINT,#$80       ; To enable RTI interrupt
 
 
-        ;; Configuración PTH.
-        bclr DDRH,$C0           ; PH7,6: lectura
-        bclr PPSH,#$09          ; Selección de interrupción por
-                                ; flanco decreciente
-        movb #$00,PIEH          ; Deshabilita todas interrupciones PH.
+        ;; PTH configuration.
+        bclr DDRH,$C0           ; PH7,6: read
+        bclr PPSH,#$09          ; Select interrupt on
+                                ; falling edge
+        movb #$00,PIEH          ; Disable all PH interrupts.
 
 
-        ;; Configuración de OC4_ISR
-        movb #$80,TSCR1         ; Habilita TCNT y funcion de TFFCA
-        movb #$03,TSCR2         ; Prescalador de 8. TCNT ovef. deshab.
-        movb #$10,TIOS          ; Habilita el IOS4
-        movb #$01,TCTL1         ; Canal 4 como Toggle
-        movb #$10,TIE           ; Habilita TC4
+        ;; OC4_ISR configuration
+        movb #$80,TSCR1         ; Enable TCNT and TFFCA function
+        movb #$03,TSCR2         ; Prescaler of 8. TCNT ovf. disabled.
+        movb #$10,TIOS          ; Enable IOS4
+        movb #$01,TCTL1         ; Channel 4 as Toggle
+        movb #$10,TIE           ; Enable TC4
 
-        ;; Configuración del ATD
+        ;; ATD configuration
         movb #$C2,ATD0CTL2
         ldab #160
 DEC_B:
@@ -183,7 +183,7 @@ DEC_B:
 
 
 ;***********************************************
-; 	   INICIALIZACIÓN_DE_VARIABLES
+; 	   VARIABLE_INITIALIZATION
 ;***********************************************
 
 ;*********** VARIABLES TIPO BIT ***********
@@ -203,7 +203,7 @@ DEC_B:
         movb #$00,CONT_TCL
         movb #$00,PATRON
 
-        ;; Inicialización de Arreglo
+        ;; Array initialization
         ldaa MAX_TCL
         ldx  #NUM_ARRAY
 INIT_ARR:
@@ -266,14 +266,14 @@ INIT_ARR:
 
 	cli		        ; Carga 0 en I en CCR
 
-        ;; Para generar ticks de 50 KHz.
+        ;; To generate 50 KHz ticks.
         ldd TCNT
         addd #60
         std TC4
 
 
 ;***********************************************
-; 	   PROGRAMA PRINCIPAL
+; 	   MAIN PROGRAM
 ;***********************************************
         ;; jsr INICIALIZAR_LCD
         bra M_CONF
@@ -281,17 +281,17 @@ INIT_ARR:
 ESPERAR:
         brset PTIH,$C0,M_MED
         movb #$00,VELOC
-        bclr BANDERAS+1,$10       ; Se desactiva bandera de ALERTA.
+        bclr BANDERAS+1,$10       ; Clear the ALERTA flag.
         bclr TSCR2,$80
-        bclr PIEH,$09           ; Deshabilita interrupción de PH(3,0).
+        bclr PIEH,$09           ; Disable PH(3,0) interrupt.
         brclr PTIH,$C0,M_CONF
 M_LIB:
         ;; bclr BANDERAS+1,$04
         jsr MODO_LIBRE
         bra ESPERAR
 M_MED:
-        bset TSCR2,$80          ; Habilita interrupción TCNT.
-        bset PIEH,$09          ; Habilita interrupción de PH(3,0)
+        bset TSCR2,$80          ; Enable TCNT interrupt.
+        bset PIEH,$09          ; Enable PH(3,0) interrupt
         jsr MODO_MEDICION
         bra ESPERAR
 M_CONF:
@@ -309,27 +309,27 @@ MODO_LIBRE:
         pshb
         psha
 
-        ;; Si ya se imprimió el mensaje, no lo imprima.
+        ;; If the message was already printed, do not print it.
         ldaa BANDERAS+1
         anda #$C0
         cmpa #$00
         beq FIN_MODO_LIBRE
 
-        ;; ;; Si ya se imprimió el mensaje, no lo imprima.
+        ;; ;; If the message was already printed, do not print it.
         ;; brclr BANDERAS+1,$C0,SOLICITAR_VLIM
 
-        movb #$04,LEDS          ; Carga patrón de LEDS respectivo.
+        movb #$04,LEDS          ; Load the respective LEDS pattern.
 
         movb #$BB,BIN1
         movb #$BB,BIN2
 
-        ;; Carga de mensaje
+        ;; Load message
         jsr INICIALIZAR_LCD
         ldx #MSG0
         ldy #MSG1
         jsr CARGAR_LCD
 
-        ;; ;; Indica mensaje ya impreso.
+        ;; ;; Indicate message already printed.
         bclr BANDERAS+1,$C0
 FIN_MODO_LIBRE:
 
@@ -344,22 +344,22 @@ FIN_MODO_LIBRE:
 ;***********************************************
 ; 	   MODO CONFIG
 ;***********************************************
-        ;; Descripción:
-        ;; Esta subrutina implementa el MODO CONFIG.
-        ;; En este modo se configura la velocidad máxima permitida.
-        ;; En esta subrutina se verifica que la velocidad máxima
-        ;; ingresada por el usuario esté entre 45 y 90 km/h.
-        ;; Es la primera subrutina al encender la tarjeta, y hasta
-        ;; que no se ingrese un valor
+        ;; Description:
+        ;; This subroutine implements MODO CONFIG.
+        ;; In this mode the maximum allowed speed is configured.
+        ;; This subroutine verifies that the maximum speed
+        ;; entered by the user is between 45 and 90 km/h.
+        ;; It is the first subroutine on board power-up, and until
+        ;; a value is entered
 
-        ;; Entradas:
-        ;; Bandera ARRAY_OK por memoria
-        ;; Variable V_LIM por memoria, desde BIN_BCD
+        ;; Inputs:
+        ;; ARRAY_OK flag via memory
+        ;; V_LIM variable via memory, from BIN_BCD
 
-        ;; Salidas:
-        ;; Variable LEDS por memoria
-        ;; Variable BIN1 por memoria
-        ;; Variable ARRAY_OK por memoria
+        ;; Outputs:
+        ;; LEDS variable via memory
+        ;; BIN1 variable via memory
+        ;; ARRAY_OK variable via memory
 
 MODO_CONFIG:
 
@@ -368,7 +368,7 @@ MODO_CONFIG:
         pshb
         psha
 
-        ;; Si ya se imprimió el mensaje, no lo imprima.
+        ;; If the message was already printed, do not print it.
         ldaa BANDERAS+1
         anda #$C0
         cmpa #$40
@@ -377,18 +377,18 @@ MODO_CONFIG:
 
         movb V_LIM,BIN1
 
-        ;; ;; Si ya se imprimió el mensaje, no lo imprima.
+        ;; ;; If the message was already printed, do not print it.
         ;; brset BANDERAS+1,$40,SOLICITAR_VLIM
 
-        movb #$01,LEDS          ; Carga patrón de LEDS respectivo.
+        movb #$01,LEDS          ; Load the respective LEDS pattern.
 
-        ;; Carga de mensaje
+        ;; Load message
         jsr INICIALIZAR_LCD
         ldx #MSG2
         ldy #MSG3
         jsr CARGAR_LCD
 
-        ;; Indica mensaje ya impreso.
+        ;; Indicate message already printed.
         ldaa BANDERAS+1
         anda #$3F
         adda #$40
@@ -398,20 +398,20 @@ SOLICITAR_VLIM:
 
         jsr TAREA_TECLADO
 
-        ;; Se consulta si ARRAY_OK está habilitado.
+        ;; Check whether ARRAY_OK is enabled.
         brclr BANDERAS+1,#$04,NO_ARRAY_OK
 
-        ;; Si ARRAY_OK=1, se convierte la velocidad límite a BIN y se
-        ;; verifica que esté en el rango aceptado.
+        ;; If ARRAY_OK=1, the speed limit is converted to BIN and
+        ;; verified to be in the accepted range.
 
-        bclr BANDERAS+1,$04     ; Ya que, sea que el valor ingresado
-                                ; esté o no en el rango aceptable,
-                                ; siempre se borra la bandera de
-                                ; ARRAY_OK, la misma se borra aquí.
+        bclr BANDERAS+1,$04     ; Since, whether or not the entered value
+                                ; is in the acceptable range,
+                                ; the ARRAY_OK flag is always cleared,
+                                ; it is cleared here.
 
-        jsr BCD_BIN             ; Aquí se convierte el valor a BIN.
+        jsr BCD_BIN             ; The value is converted to BIN here.
 
-        ;; Aquí se comprueba si 45km/h =< V_LIM =< 90km/h.
+        ;; Here it is checked whether 45km/h =< V_LIM =< 90km/h.
         ldaa V_LIM
         cmpa #45
         blt FUERA_DE_RANGO
@@ -419,30 +419,30 @@ SOLICITAR_VLIM:
         bgt FUERA_DE_RANGO
 
 
-        ;; Si el valor está dentro del rango aceptable, este se guarda
-        ;; a BIN1.
+        ;; If the value is within the acceptable range, it is stored
+        ;; to BIN1.
 DENTRO_DE_RANGO:
         movb V_LIM,BIN1
         ;; bclr BANDERAS+1,$04
         bra FIN_MODO_CONFIG
 
-        ;; Si el valor no está en el rango aceptado, dicho valor se
-        ;; sigue esperando por un valor válido introducido.
+        ;; If the value is not in the accepted range, that value
+        ;; keeps waiting for a valid value to be entered.
 FUERA_DE_RANGO:
         movb #$00,V_LIM
         movb #$00,BIN1
         movb #$BB,BIN2
         bra FIN_MODO_CONFIG
 
-        ;; Aquí se ingresa cuando aún no se ha ingresado una cantidad
-        ;; válida en el teclado.
+        ;; This is entered when a valid amount has not yet been
+        ;; entered on the keypad.
 NO_ARRAY_OK:
         tst V_LIM
         bne FIN_MODO_CONFIG
 
         bra SOLICITAR_VLIM
 
-        ;; Aquí se termina la subrutina.
+        ;; The subroutine ends here.
 FIN_MODO_CONFIG:
 
         pula
@@ -455,22 +455,22 @@ FIN_MODO_CONFIG:
 ;***********************************************
 ;          MODO_MEDICION
 ;***********************************************
-        ;; Descripción:
-        ;; Esta subrutina implementa el MODO COMPENTECIA.
-        ;; En este modo se llama a la subrutina PANT_CTRL si la
-        ;; VELOC != 0. Al entrar en la subrutina, se asegura que BIN1
-        ;; y BIN2 estén en $BB, para que inicialmente se mantenga los
-        ;; 7SEG apagados. Cuando se sale de este modo, se borra las
-        ;; variables VELOC y ALERTA.
+        ;; Description:
+        ;; This subroutine implements MODO COMPETENCIA.
+        ;; In this mode the PANT_CTRL subroutine is called if
+        ;; VELOC != 0. On entering, BIN1 and BIN2 are ensured
+        ;; to be $BB, so that the 7SEG initially stay
+        ;; off. When this mode is exited, the VELOC and ALERTA
+        ;; variables are cleared.
 
-        ;; Entradas:
-        ;; Variable VELOC por memoria
+        ;; Inputs:
+        ;; VELOC variable via memory
 
-        ;; Salidas:
-        ;; Variable BIN1 por memoria
-        ;; Variable BIN2 por memoria
-        ;; Variable VELOC por memoria
-        ;; Variable ALERTA por memoria
+        ;; Outputs:
+        ;; BIN1 variable via memory
+        ;; BIN2 variable via memory
+        ;; VELOC variable via memory
+        ;; ALERTA variable via memory
 
 MODO_MEDICION:
         pshy
@@ -478,7 +478,7 @@ MODO_MEDICION:
         pshb
         psha
 
-        ;; Si ya se imprimió el mensaje, no lo imprima.
+        ;; If the message was already printed, do not print it.
         ldaa BANDERAS+1
         anda #$C0
         cmpa #$80
@@ -488,10 +488,10 @@ MODO_MEDICION:
         movb #$BB,BIN2
 
 
-        movb #$02,LEDS          ; Carga patrón de LEDS respectivo.
+        movb #$02,LEDS          ; Load the respective LEDS pattern.
 
-        ;;--------------- Carga de mensaje ---------------
-        ;; Se cargan los mensajes de:
+        ;;--------------- Load message ---------------
+        ;; The messages loaded are:
         ;; X: MODO MEDICION
         ;; Y:   ESPERANDO
         jsr INICIALIZAR_LCD
@@ -500,17 +500,17 @@ MODO_MEDICION:
         jsr CARGAR_LCD
 
 
-        ;; Indica mensaje ya impreso.
+        ;; Indicate message already printed.
         ldaa BANDERAS+1
         anda #$3F
         adda #$80
         staa BANDERAS+1
 
 MEDICION_RET:
-        ;; Si PH0_PRES=1, imprime "CALCULANDO".
+        ;; If PH0_PRES=1, print "CALCULANDO".
         brclr BANDERAS,$02,CONTINUAR_MED
 
-        ;; Carga mensaje de "CALCULANDO"
+        ;; Load "CALCULANDO" message
         jsr INICIALIZAR_LCD
         ldx #MSG4
         ldy #MSG6
@@ -519,19 +519,19 @@ MEDICION_RET:
 
         bclr BANDERAS,$02
 
-        ;;------- Funciones generales de la subrutina ------
+        ;;------- General subroutine functions ------
 CONTINUAR_MED:
-        ;; Se carga $BB en BIN1 y BIN2 para asegurar que se
-        ;; encuentran en este estado al inicio de la subrutina.
+        ;; $BB is loaded into BIN1 and BIN2 to ensure they
+        ;; are in this state at the start of the subroutine.
         ;; movb #$BB,BIN1
         ;; movb #$BB,BIN2
 
-        ;; Se prueba si VELOC=0. Si lo es, se termina la subrutina.
+        ;; Test whether VELOC=0. If so, the subroutine ends.
         tst VELOC
         beq FIN_MEDICION
-        jsr PANT_CTRL           ; Si VELOC != 0, se llama a PANT_CTRL.
-        ;; movb #$00,VELOC         ; Limpia VELOC al final de subruntina.
-        ;; bset BANDERAS+1,$10     ; Se limpia bandera de ALERTA.
+        jsr PANT_CTRL           ; If VELOC != 0, call PANT_CTRL.
+        ;; movb #$00,VELOC         ; Clear VELOC at the end of the subroutine.
+        ;; bset BANDERAS+1,$10     ; Clear the ALERTA flag.
 
 
 FIN_MEDICION:
@@ -546,44 +546,44 @@ FIN_MEDICION:
 ;***********************************************
 ; 	             RTI_ISR
 ;***********************************************
-        ;; Descripción:
-        ;; Esta subrutina reduce el contador de rebotes cada 1 ms.
+        ;; Description:
+        ;; This subroutine reduces the debounce counter every 1 ms.
 
-        ;; Entradas:
-        ;; Variable CONT_REB por memoria
+        ;; Inputs:
+        ;; CONT_REB variable via memory
 
-        ;; Salidas:
-        ;; Variable CONT_REB por memoria
+        ;; Outputs:
+        ;; CONT_REB variable via memory
 
 RTI_ISR:
-        ;; Reduce el valor de CONT_REB si este es diferente de cero.
+        ;; Reduce CONT_REB if it is nonzero.
         tst CONT_REB
         beq RETORNAR
         dec CONT_REB
 
 RETORNAR:
-        bset crgflg, #$80       ; Se rehabilita la interrupción
+        bset crgflg, #$80       ; Re-enable the interrupt
         rti
 
 ;***********************************************
 ;          TCNT_ISR
 ;***********************************************
-        ;; Descripción:
-        ;; Esta subrutina realiza dos tareas:
-        ;; 1. Incrementar TICK_VEL para el cálculo de VELOC.
-        ;; 2. Control de tiempos de retardo de cambio de mensaje en las
-        ;; pantallas. Para ello se decrementa TICK_EN y TICK_DIS si no
-        ;; están en cero. Cuando TICK_EN=0, se hace PANT_FLAG=1. Cuando
-        ;; TICK_DIS=0, se hace PANT_FLAG=0.
+        ;; Description:
+        ;; This subroutine performs two tasks:
+        ;; 1. Increment TICK_VEL for the VELOC calculation.
+        ;; 2. Control of message-change delay times on the
+        ;; displays. For that, TICK_EN and TICK_DIS are decremented if
+        ;; not zero. When TICK_EN=0, PANT_FLAG=1 is set. When
+        ;; TICK_DIS=0, PANT_FLAG=0 is set.
 
-        ;; Entradas:
-        ;; Variable TICK_EN por memoria
-        ;; Variable TICK_DIS por memoria
+        ;; Inputs:
+        ;; TICK_EN variable via memory
+        ;; TICK_DIS variable via memory
 
-        ;; Salidas:
-        ;; Variable TICK_EN por memoria
-        ;; Variable TICK_DIS por memoria
-        ;; Bandera PANT_FLAG por memoria
+        ;; Outputs:
+        ;; TICK_EN variable via memory
+        ;; TICK_DIS variable via memory
+        ;; PANT_FLAG flag via memory
 
 TCNT_ISR:
 ;;         dec VAR
@@ -597,7 +597,7 @@ TCNT_ISR:
 ;; REFILL:
 ;;         lsl LEDS
 ;; CCCC:
-        ;; Se increcmenta los ticks de velocidad.
+        ;; The speed ticks are incremented.
         ldaa TICK_VEL
         cmpa #$FF
         bhs NO_INC
@@ -606,15 +606,15 @@ NO_INC:
 
         brclr BANDERAS+1,$20,TCNT_ISR_FIN
 
-        ;; ;; Si PANT_FLAG=1, se pregunta si TICKS_DIS=0.
+        ;; ;; If PANT_FLAG=1, check whether TICKS_DIS=0.
         ;; brset BANDERAS+1,$08,ASK_PANT_FLG_TCNT
 
-        ;; Se consulta si TICK_EN=0, en cuyo caso, se hace PANT_FLG=1
+        ;; Check whether TICK_EN=0, in which case PANT_FLG=1 is set
         ldd TICK_EN
         cpd #$0000
         bls HAB_PANT_FLG
 
-        ;; Se decrementa el valor de TICK_EN si diferente de cero.
+        ;; Decrement TICK_EN if nonzero.
         ldx TICK_EN
         dex
         stx TICK_EN
@@ -624,14 +624,14 @@ NO_INC:
 
 ;; ASK_PANT_FLG_TCNT:
 HAB_PANT_FLG:
-        ;; Se consulta si TICK_EN=0, en cuyo caso, se hace PANT_FLG=1
+        ;; Check whether TICK_EN=0, in which case PANT_FLG=1 is set
         ldd TICK_DIS
         cpd #$0000
         bls DESHAB_PANT_FLG
 
-        ;; Se habilita PANT_FLG.
+        ;; Enable PANT_FLG.
         bset BANDERAS+1,$08
-        ;; Se decrementa el valor de TICK_DIS si diferente de cero.
+        ;; Decrement TICK_DIS if nonzero.
         ldx TICK_DIS
         dex
         stx TICK_DIS
@@ -639,44 +639,44 @@ HAB_PANT_FLG:
         bra TCNT_ISR_FIN
 
 DESHAB_PANT_FLG:
-        ;; Se deshabilita PANT_FLG y ALERTA.
+        ;; Disable PANT_FLG and ALERTA.
         bclr BANDERAS+1,$18
 TCNT_ISR_FIN:
-        ;; Se limpia la bandera de interrupción por overflow.
+        ;; Clear the overflow interrupt flag.
         bset TFLG2,$80
         rti
 
 ;***********************************************
 ;          ATD_ISR
 ;***********************************************
-;; Descripción:
-        ;; Esta subrutina implementa el MODO CONFIG.
-        ;; En este modo se configura la velocidad máxima permitida.
-        ;; En esta subrutina se verifica que la velocidad máxima
-        ;; ingresada por el usuario esté entre 45 y 90 km/h.
-        ;; Es la primera subrutina al encender la tarjeta, y hasta
-        ;; que no se ingrese un valor
+;; Description:
+        ;; This subroutine implements MODO CONFIG.
+        ;; In this mode the maximum allowed speed is configured.
+        ;; This subroutine verifies that the maximum speed
+        ;; entered by the user is between 45 and 90 km/h.
+        ;; It is the first subroutine on board power-up, and until
+        ;; a value is entered
 
-        ;; Entradas:
-        ;; Variable CONT_7SEG por memoria
-        ;; Variable CONT_TICKS por memoria
-        ;; Variable CONT_200 por memoria
-        ;; Variable DISP1 por memoria
-        ;; Variable DISP2 por memoria
-        ;; Variable DISP3 por memoria
-        ;; Variable DISP4 por memoria
+        ;; Inputs:
+        ;; CONT_7SEG variable via memory
+        ;; CONT_TICKS variable via memory
+        ;; CONT_200 variable via memory
+        ;; DISP1 variable via memory
+        ;; DISP2 variable via memory
+        ;; DISP3 variable via memory
+        ;; DISP4 variable via memory
 
-        ;; Salidas:
-        ;; Variable CONT_7SEG por memoria
-        ;; Variable CONT_TICKS por memoria
-        ;; Variable CONT_200 por memoria
-        ;; Variable PTP por memoria
-        ;; Variable PORTB por memoria
-        ;; Variable PTJ por memoria
+        ;; Outputs:
+        ;; CONT_7SEG variable via memory
+        ;; CONT_TICKS variable via memory
+        ;; CONT_200 variable via memory
+        ;; PTP variable via memory
+        ;; PORTB variable via memory
+        ;; PTJ variable via memory
 
 ATD_ISR:
-        ;; Se leen las 6 conversiones y se suman todas en RR1 para
-        ;; luego determinar su promedio.
+        ;; The 6 conversions are read and all summed into RR1 to
+        ;; then determine their average.
         ldd ADR00H
         addd ADR01H
         addd ADR02H
@@ -684,176 +684,176 @@ ATD_ISR:
         addd ADR04H
         addd ADR05H
 
-        ;; Se determina el promedio de la medición.
+        ;; Determine the average of the measurement.
         ldx #6
         idiv
 
-        ;; Se guarda el valor medido en POT.
+        ;; The measured value is stored in POT.
         tfr X,Y
-        ;; staa POT         ; El promedio se guarda en Nivel_PROM.
+        ;; staa POT         ; The average is stored in Nivel_PROM.
 
-        ;; Se calcula brillo como: [BRILLO = (20 X POT)/255].
+        ;; Brightness is computed as: [BRILLO = (20 X POT)/255].
         ldd #20
         ldx #255
-        emul                    ; Calcula (20 X POT)
-        idiv                    ; Calcula (20 X POT)/255
+        emul                    ; Compute (20 X POT)
+        idiv                    ; Compute (20 X POT)/255
         tfr X,A
         staa BRILLO
 
-        ;; Se rehabilita la interrupción por ATD.
+        ;; Re-enable the ATD interrupt.
         ;; movb #$87,ATD0CTL5
         rti
 
 ;***********************************************
 ;          OC4_ISR
 ;***********************************************
-;; Descripción:
-        ;; Esta subrutina implementa el MODO CONFIG.
-        ;; En este modo se configura la velocidad máxima permitida.
-        ;; En esta subrutina se verifica que la velocidad máxima
-        ;; ingresada por el usuario esté entre 45 y 90 km/h.
-        ;; Es la primera subrutina al encender la tarjeta, y hasta
-        ;; que no se ingrese un valor
+;; Description:
+        ;; This subroutine implements MODO CONFIG.
+        ;; In this mode the maximum allowed speed is configured.
+        ;; This subroutine verifies that the maximum speed
+        ;; entered by the user is between 45 and 90 km/h.
+        ;; It is the first subroutine on board power-up, and until
+        ;; a value is entered
 
-        ;; Entradas:
-        ;; Variable CONT_7SEG por memoria
-        ;; Variable CONT_TICKS por memoria
-        ;; Variable CONT_200 por memoria
-        ;; Variable DISP1 por memoria
-        ;; Variable DISP2 por memoria
-        ;; Variable DISP3 por memoria
-        ;; Variable DISP4 por memoria
+        ;; Inputs:
+        ;; CONT_7SEG variable via memory
+        ;; CONT_TICKS variable via memory
+        ;; CONT_200 variable via memory
+        ;; DISP1 variable via memory
+        ;; DISP2 variable via memory
+        ;; DISP3 variable via memory
+        ;; DISP4 variable via memory
 
-        ;; Salidas:
-        ;; Variable CONT_7SEG por memoria
-        ;; Variable CONT_TICKS por memoria
-        ;; Variable CONT_200 por memoria
-        ;; Variable PTP por memoria
-        ;; Variable PORTB por memoria
-        ;; Variable PTJ por memoria
+        ;; Outputs:
+        ;; CONT_7SEG variable via memory
+        ;; CONT_TICKS variable via memory
+        ;; CONT_200 variable via memory
+        ;; PTP variable via memory
+        ;; PORTB variable via memory
+        ;; PTJ variable via memory
 
 OC4_ISR:
-        ;; Cuenta para refrescar valor de dígitos.
-        ldd CONT_7SEG           ; Se incrementa el contador de 7SEG
-        addd #$01               ; para llevar la cuenta de los 100ms
-        std CONT_7SEG           ; en que se debe llamar a BCD_7SEG.
+        ;; Counter to refresh the digit value.
+        ldd CONT_7SEG           ; Increment the 7SEG counter
+        addd #$01               ; to keep track of the 100ms
+        std CONT_7SEG           ; at which BCD_7SEG must be called.
 
-        ;; Se consulta si el valor de CONT_7SEG ya llegó a su máxumo.
+        ;; Check whether CONT_7SEG has reached its maximum.
         ;; ldd CONT_7SEG
         cpd #5000
-        lbne ASK_TICKS        ; Si alcanzó el máximo,
-        movw #$0000,CONT_7SEG   ; se recarga CONT_7SEG en cero.
-        jsr CONV_BIN_BCD        ; Se convierte BIN1 y BIN2 a BCD,
-        jsr BCD_7SEG            ; y se convierte variables BCD a 7SEG.
+        lbne ASK_TICKS        ; If it reached the maximum,
+        movw #$0000,CONT_7SEG   ; reload CONT_7SEG to zero.
+        jsr CONV_BIN_BCD        ; Convert BIN1 and BIN2 to BCD,
+        jsr BCD_7SEG            ; and convert BCD variables to 7SEG.
 
-        ;; Se consulta si el valor CONT_200 llegó a su máximo.
+        ;; Check whether CONT_200 reached its maximum.
         dec CONT_200
         tst CONT_200
-        lbhi ASK_TICKS         ; Si no llegó máximo, finalizar.
-        movb #$02,CONT_200      ; Si llegó, recargar contador.
-        movb #$87,ATD0CTL5      ; Se rehabilita
+        lbhi ASK_TICKS         ; If maximum not reached, finish.
+        movb #$02,CONT_200      ; If reached, reload the counter.
+        movb #$87,ATD0CTL5      ; Re-enable
         jsr PATRON_LEDS
 
-        ;; ;; Cuenta para habilitar la conversión en el ATD.
-        ;; ldd CONT_200            ; Se incrementa el contador de ATD
-        ;; addd #$01               ; para habilitar la conversión cada
-        ;; std CONT_200            ; 200ms del potenciómetro.
+        ;; ;; Counter to enable the ATD conversion.
+        ;; ldd CONT_200            ; Increment the ATD counter
+        ;; addd #$01               ; to enable the conversion every
+        ;; std CONT_200            ; 200ms from the potentiometer.
 
 ASK_TICKS:
-        ;; Cuenta para control por ciclo de trabajo.
-        dec CONT_TICKS          ; Se descuenta el contador de ticks
-        tst CONT_TICKS          ; que funciona como el N en el manejo
-        bls CERO                ; de multiplexación de pantallas.
+        ;; Counter for duty-cycle control.
+        dec CONT_TICKS          ; Count down the tick counter,
+        tst CONT_TICKS          ; which acts as N in the display
+        bls CERO                ; multiplexing handling.
 
-        ;; Determina el ancho de pulso de habilitación de LEDs.
-        ldaa CONT_TICKS         ; Tomando a N=100  y a K=POT,
-        ldab #100               ; se determina el valor de DT al
-        subb BRILLO                ; hacer DT = N-K.
+        ;; Determine the enable pulse width for the LEDs.
+        ldaa CONT_TICKS         ; Taking N=100 and K=POT,
+        ldab #100               ; DT is determined by
+        subb BRILLO                ; computing DT = N-K.
         stb DT
-        cmpa DT                 ; Si DT >= CONT_TICKS, se habilitan
-        bls HAB_LED             ; los 7SEG y deshabilita los LEDs.
+        cmpa DT                 ; If DT >= CONT_TICKS, enable
+        bls HAB_LED             ; the 7SEG and disable the LEDs.
 
         lbra FIN_OC4_ISR
 
-        ;; Manejo de habilitación de LEDS.
+        ;; LEDS enable handling.
 HAB_LED:
-        movb #$FF,PTP           ; Carga $FF, pues no habilita
-                                ; ningún valor especial en 7SEG.
-        bclr PTJ,#$02           ; Se habilitan los LEDs.
-        movb LEDS,PORTB         ; Se carga el valor de LEDS a PORTB.
+        movb #$FF,PTP           ; Load $FF, since it enables
+                                ; no special value on the 7SEG.
+        bclr PTJ,#$02           ; Enable the LEDs.
+        movb LEDS,PORTB         ; Load the LEDS value to PORTB.
         bra FIN_OC4_ISR
 
-        ;; Manejo de habilitación de DIGITOS.
+        ;; DIGIT enable handling.
 CERO:
-        movb #100,CONT_TICKS    ; Cuándo CONT_TICKS ha llegado a cero
-                                ; se recarga CONT_TICKS en 100.
+        movb #100,CONT_TICKS    ; When CONT_TICKS has reached zero,
+                                ; reload CONT_TICKS to 100.
 
-        inc CONT_DIG            ; Además, aquí se incrementa CONT_DIG
-        bset PTJ,#$02           ; y se deshabilitan los LEDs.
+        inc CONT_DIG            ; Also, CONT_DIG is incremented here
+        bset PTJ,#$02           ; and the LEDs are disabled.
 
-        ;; Se consulta cuál es el dígito a escribir, de acuerdo con
-        ;; el contenido de CONT_DIG.
+        ;; Check which digit to write, according to
+        ;; the contents of CONT_DIG.
         brset CONT_DIG,#$03,HAB_DISP4
         brset CONT_DIG,#$02,HAB_DISP3
         brset CONT_DIG,#$01,HAB_DISP2
 
-        ;; Habilita dígito 1
+        ;; Enable digit 1
 HAB_DISP1:
-        ;; La habilitación de DISP1 es especial, si habilita en dos
-        ;; casos, cuando se tiene un valor de 00 en CONT_DIG y cuando la cuenta excedió el valor
+        ;; DISP1 enabling is special, it enables in two
+        ;; cases, when CONT_DIG is 00 and when the count exceeded the value
 
-        tst CONT_DIG            ; La habilitación de DISP1 es especial,
-        beq LOAD_DISP1           ; pues se habilita cuando la cuenta
-        movb #$00,CONT_DIG      ; es cero o cuando se rebasó. En el
-                                ; último caso se debe habilitar el
-                                ; dígito y reestablecer el contador.
+        tst CONT_DIG            ; DISP1 enabling is special,
+        beq LOAD_DISP1           ; since it enables when the count
+        movb #$00,CONT_DIG      ; is zero or when it overflowed. In the
+                                ; latter case the digit must be enabled
+                                ; and the counter reset.
 
 LOAD_DISP1:
-        movb #$07,PTP           ; Se habilita el DISP1 en el PP
-        movb DISP1,PORTB         ; y se carga su valor en PORTB.
+        movb #$07,PTP           ; Enable DISP1 on PP
+        movb DISP1,PORTB         ; and load its value to PORTB.
         bra FIN_OC4_ISR
 
-        ;; Habilita dígito 2
-        ;; El dígito 2 tiene una particularidad, que cuando no se
-        ;; imprimen las decenas, permanece inhabilitado.
+        ;; Enable digit 2
+        ;; Digit 2 has a peculiarity: when the tens are not
+        ;; printed, it stays disabled.
 HAB_DISP2:
         ldaa DISP2
-        cmpa #$3F               ; Si el dígito es 0,
-        beq FIN_OC4_ISR         ; no se imprime.
+        cmpa #$3F               ; If the digit is 0,
+        beq FIN_OC4_ISR         ; it is not printed.
 
-        ;; Si no es 0, se habilita DISP2 y se carga en el valor
-        ;; correspondiente en PORTB.
-        movb #$0B,PTP           ; Habilita DISP2.
+        ;; If not 0, enable DISP2 and load the corresponding
+        ;; value into PORTB.
+        movb #$0B,PTP           ; Enable DISP2.
 LOAD_DISP2:
-        movb DISP2,PORTB         ; Carga dígito en PORTB.
+        movb DISP2,PORTB         ; Load digit to PORTB.
         bra FIN_OC4_ISR
 
-        ;; Habilita dígito 3
+        ;; Enable digit 3
 HAB_DISP3:
-        movb #$0D,PTP           ; Habilita DISP3
+        movb #$0D,PTP           ; Enable DISP3
 LOAD_DISP3:
-        movb DISP3,PORTB         ; Carga dígito en PORTB.
+        movb DISP3,PORTB         ; Load digit to PORTB.
         bra FIN_OC4_ISR
 
-        ;; Habilita dígito 4
-        ;; El dígito 4 tiene una particularidad, que cuando no se
-        ;; imprimen las decenas, permanece inhabilitado.
+        ;; Enable digit 4
+        ;; Digit 4 has a peculiarity: when the tens are not
+        ;; printed, it stays disabled.
 HAB_DISP4:
         ldaa DISP4
-        cmpa #$3F               ; Si el dígito es 0,
-        beq FIN_OC4_ISR         ; no se imprime.
-        movb #$0E,PTP           ; Habilita el DISP4
+        cmpa #$3F               ; If the digit is 0,
+        beq FIN_OC4_ISR         ; it is not printed.
+        movb #$0E,PTP           ; Enable DISP4
 LOAD_DISP4:
-        movb DISP4,PORTB         ; Carga dígito en PORTB.
+        movb DISP4,PORTB         ; Load digit to PORTB.
         bra FIN_OC4_ISR
 
 FIN_OC4_ISR:
-        ;; Manejor de Cont_Delay para LCD
+        ;; Cont_Delay handling for LCD
         tst CONT_DELAY
-        beq CARGAR_TC4          ; Si CONT_DELAY != 0,
-        dec CONT_DELAY          ; se decrementa su valor.
+        beq CARGAR_TC4          ; If CONT_DELAY != 0,
+        dec CONT_DELAY          ; decrement its value.
 CARGAR_TC4:
-        ;; Se lee TCNT y se recarga el próximo valor a comparar en
+        ;; Read TCNT and reload the next value to compare in
         ;; TC4.
         ldd TCNT
         addd #60
@@ -864,33 +864,33 @@ CARGAR_TC4:
 ;***********************************************
 ;          PANT_CTRL
 ;***********************************************
-        ;; Descripción:
-        ;; Esta subrutina es la encargada de calcular el retardo de
-        ;; tiempo, con base en VELOC, para cambiar el mensaje en la
-        ;; pantalla cuando el vehículo esté a 100m de la meta y luego
-        ;; cuando el vehículo la haya superado. Para ello se calculan
-        ;; aquí los contadores de ticks necesarios para desplegar el
-        ;; primer mensaje y para cambiarlo luego de que el vehículo
-        ;; supere la pantalla. Ya que el cálculo de ticks se hace
-        ;; solo la primera vez que se en la subrutin, se emplea una
-        ;; bandera llamada CALC_TICKS. Los ticks son decrementados
-        ;; por la subrutina TCNT_ISR. En un nuevo llamado a la
-        ;; subrutina, se espera PANT_FLAG=1 para cambiar el mensaje
-        ;; en la pantalla  y desplegar el valor de la velocidad y la
-        ;; velocidad límite en la pantalla 7SEG.
+        ;; Description:
+        ;; This subroutine computes the time delay,
+        ;; based on VELOC, to change the message on the
+        ;; display when the vehicle is 100m from the goal and then
+        ;; once the vehicle has passed it. For this it computes
+        ;; the tick counters needed to show the
+        ;; first message and to change it after the vehicle
+        ;; passes the display. Since the tick calculation is done
+        ;; only the first time in the subroutine, a flag called
+        ;; CALC_TICKS is used. The ticks are decremented
+        ;; by the TCNT_ISR subroutine. On a new call to the
+        ;; subroutine, PANT_FLAG=1 is awaited to change the message
+        ;; on the display and show the speed value and the
+        ;; speed limit on the 7SEG display.
 
-        ;; Además, esta subrutina habilita la bandera de ALERTA, si la
-        ;; velocidad está fuera del rango aceptado.
+        ;; Also, this subroutine sets the ALERTA flag if the
+        ;; speed is outside the accepted range.
 
-        ;; Entradas:
-        ;; Variable VELOC por memoria
-        ;; Variable V_LIM por memoria
-        ;; Bandera TICK_EN por memoria
+        ;; Inputs:
+        ;; VELOC variable via memory
+        ;; V_LIM variable via memory
+        ;; TICK_EN flag via memory
 
-        ;; Salidas:
-        ;; Variable BIN1 por memoria
-        ;; Variable BIN2 por memoria
-        ;; Bandera ALERTA por memoria
+        ;; Outputs:
+        ;; BIN1 variable via memory
+        ;; BIN2 variable via memory
+        ;; ALERTA flag via memory
 
 PANT_CTRL:
 
@@ -900,9 +900,9 @@ PANT_CTRL:
         psha
 
         ;; movb #$FF,LEDS
-        bclr PIEH,$09           ; Deshabilita interrupción de PH(3,0).
+        bclr PIEH,$09           ; Disable PH(3,0) interrupt.
 
-        ;; Se verifica si 30km/h <= VELOC <= V_LIM
+        ;; Check whether 30km/h <= VELOC <= V_LIM
         ldaa VELOC
         cmpa #30
         lbls FUERA_RANG
@@ -918,53 +918,53 @@ FUERA_RANG:
         cmpa #$AA
         beq ASK_PANT_FLG
 
-        movw #$0001,TICK_EN       ; Se carga 1 para encender la pantalla
-                                ; rápido, conteniendo el mensaje de
-                                ; alerta.
+        movw #$0001,TICK_EN       ; Load 1 to turn the display on
+                                ; quickly, holding the alert
+                                ; message.
 
-        movw #$005C,TICK_DIS      ; Se carga el valor respectivo para
-                                ; hacer que la pantalla permanezca
-                                ; encendida por 2s.
+        movw #$005C,TICK_DIS      ; Load the respective value to
+                                ; keep the display on
+                                ; for 2s.
 ;; CARGAR_AA_VELOC:
-        ;; Secuencia a realizarse cuando la velocidad medida excede los
-        ;; límites.
-        movb #$AA,VELOC         ; Se carga "--" en 7SEG de velocidad.
+        ;; Sequence run when the measured speed exceeds the
+        ;; limits.
+        movb #$AA,VELOC         ; Load "--" into the speed 7SEG.
 
-        bset BANDERAS+1,$20     ; Se hace CALC_TICKS=1.
+        bset BANDERAS+1,$20     ; Set CALC_TICKS=1.
 
         bra ASK_PANT_FLG
 
 ALERTA:
-        bset BANDERAS+1,$10       ; Se activa bandera de ALERTA.
+        bset BANDERAS+1,$10       ; Set the ALERTA flag.
 
 ASK_CALC_TICKS:
-        ;; Si CALC_TICKS=0, se calcula número de ticks.
+        ;; If CALC_TICKS=0, the number of ticks is computed.
         brclr BANDERAS+1,$20,CALC_TICKS
 
         ;; movb #$00,LEDS
 ASK_PANT_FLG:
-        ;; Si PANT_FLAG=1, se pregunta si está encendida.
+        ;; If PANT_FLAG=1, check whether it is on.
         brset BANDERAS+1,$08,PANT_FLAG_EN
 
-        ;; Si PANT_FLAG=0, se carga el mensaje de velocidad.
+        ;; If PANT_FLAG=0, the speed message is loaded.
 PANT_FLAG_DIS:
         ldaa BIN1
         cmpa #$BB
         beq FIN_PANT_CTRL
 
-        ;; Se carga mensaje de ESPERANDO...
+        ;; Load ESPERANDO... message
         jsr INICIALIZAR_LCD
         ldx #MSG4
         ldy #MSG8
         jsr CARGAR_LCD
 
-        ;; Se carga $BB en BIN1 y BIN2 para asegurar que se
-        ;; encuentran en este estado al inicio de la subrutina.
+        ;; $BB is loaded into BIN1 and BIN2 to ensure they
+        ;; are in this state at the start of the subroutine.
         movb #$BB,BIN1
         movb #$BB,BIN2
         movb #$00,VELOC
-        bset PIEH,$09           ; Habilita interrupción de PH(3,0).
-        bclr BANDERAS+1,$20     ; Se hace CALC_TICKS=0.
+        bset PIEH,$09           ; Enable PH(3,0) interrupt.
+        bclr BANDERAS+1,$20     ; Set CALC_TICKS=0.
         bra FIN_PANT_CTRL
 
 PANT_FLAG_EN:
@@ -972,33 +972,33 @@ PANT_FLAG_EN:
         cmpa #$BB
         bne FIN_PANT_CTRL
 
-        ;; Si se está en el tiempo de pantalla habilitada, e imprimiendo
-        ;; el valor respectivo a 100m de la meta, se carga el mensaje
-        ;; respectivo.
+        ;; If within the display-on time and printing
+        ;; the value for 100m from the goal, the respective
+        ;; message is loaded.
         jsr INICIALIZAR_LCD
         ldx #MSG4
         ldy #MSG5
         jsr CARGAR_LCD
 
-        ;; Se cargan los valores de velocidad límite y velocidad medida
-        ;; para ser desplegados en los 7SEG.
+        ;; The speed-limit and measured-speed values are loaded
+        ;; to be shown on the 7SEG.
         movb V_LIM,BIN1
         movb VELOC,BIN2
         bra FIN_PANT_CTRL
 
 CALC_TICKS:
-        ;; Se calculan los ticks correspondientes a la pantalla
-        ;; habilitada y deshabilitada.
-        ldaa VELOC              ; tiempo de ticks a partir de la
-        tfr A,X                 ; velocidad.
-        ldd #36000                ; Convierte km/h a m/s y determina el
+        ;; The ticks for the display on and off states
+        ;; are computed.
+        ldaa VELOC              ; tick time from the
+        tfr A,X                 ; speed.
+        ldd #36000                ; Convert km/h to m/s and determine the
         idiv
         tfr X,D
 
-        ;; Se calcula el valor de los ticks a partir del tiempo
-        ;; estimado en que se recorren 100m, respecto a la velocidad
-        ;; promedio calculada.
-        ;; Se usa la siguiente fórmula:
+        ;; The tick value is computed from the estimated
+        ;; time to travel 100m, relative to the computed
+        ;; average speed.
+        ;; The following formula is used:
         ;; Tiempo = (8*(2^16)*Ticks)/(24x10^6)
         ;;        => Ticks = ((24x10^6)*Time)/(8*(2^16))
         ;;        => Ticks = 46*Time
@@ -1008,10 +1008,10 @@ CALC_TICKS:
         idiv
         tfr X,D
 
-        std TICK_EN             ; Se cargan ticks para enable.
-        ;; lsld                    ; TICK_DES=TICK_EN*2, se multiplica x2.
-        std TICK_DIS            ; Se cargan ticks para disable, y ya que
-        bset BANDERAS+1,$20     ; Se hace CALC_TICKS=1.
+        std TICK_EN             ; Load ticks for enable.
+        ;; lsld                    ; TICK_DES=TICK_EN*2, multiply by 2.
+        std TICK_DIS            ; Load ticks for disable, and since
+        bset BANDERAS+1,$20     ; Set CALC_TICKS=1.
 
         ;; movb #$0F,LEDS
 
@@ -1029,21 +1029,21 @@ FIN_PANT_CTRL:
 ;***********************************************
 ;          CALCULAR
 ;***********************************************
-        ;; Descripción:
-        ;; Esta es la subrutina de servicio de interrupciones del
-        ;; puerto H. Se habilita en el MODO_MEDICION. Se encarga de
-        ;; calcular la velocidad del vehículo en KM/H. Se tienen dos
-        ;; interrupciones diferentes:
-        ;; * PH3: Pone TICK_VEL en cero.
-        ;; * PH0: Se lee TICK_VEL y se calcula veloc. de vehículo, a
-        ;; partir de dicho valor. Además, se reestablece TICK_VEL y se
-        ;; imprime mensaje de "CACULANDO..."
+        ;; Description:
+        ;; This is the interrupt service subroutine for
+        ;; port H. It is enabled in MODO_MEDICION. It computes
+        ;; the vehicle speed in KM/H. There are two
+        ;; different interrupts:
+        ;; * PH3: Sets TICK_VEL to zero.
+        ;; * PH0: TICK_VEL is read and the vehicle speed is computed
+        ;; from that value. Also, TICK_VEL is reset and the
+        ;; "CACULANDO..." message is printed.
 
-        ;; Entradas:
-        ;; Variable TICK_VEL por memoria
+        ;; Inputs:
+        ;; TICK_VEL variable via memory
 
-        ;; Salidas:
-        ;; Variable VELOC por memoria
+        ;; Outputs:
+        ;; VELOC variable via memory
 
 CALCULAR:
 
@@ -1054,7 +1054,7 @@ CALCULAR:
         brset PIFH,#$08,PH3_PULSADO
         bra SALIR_CALCULAR
 
-        ;; Inicial conteo de ticks para calcular velocidad.
+        ;; Start tick counting to compute speed.
 PH3_PULSADO:
         bset BANDERAS,$02
         movb #$00,TICK_VEL
@@ -1062,29 +1062,29 @@ PH3_PULSADO:
         bra SALIR_CALCULAR
 
 PH0_PULSADO:
-        ;; Se calcula la velocidad a partir de TICK_VEL.
-        ;; Se tiene que:
+        ;; The speed is computed from TICK_VEL.
+        ;; We have:
         ;;  VELOC = (40m/(TICK_VEL*20)) * (3600/1000) [km/h]
         ;;  VELOC = 144/(TICK_VEL*T_int_overflow) [km/h]
-        ;; Sin embargo, ya que  T_int_overflow = 0.021845333.. es
-        ;; requerido escalar dicho valor. Por tanto, se multiplica
-        ;; T_int_overflow por 10000, para obtener una exactitud de 4
-        ;; cifras significativas. Para obtener el valor en la escala
-        ;; deseada, luego estos valores se dividen por 10000^2 y se
-        ;; multiplican por el valor de conversión a km/h: 144.
+        ;; However, since T_int_overflow = 0.021845333.. it is
+        ;; required to scale that value. So T_int_overflow is
+        ;; multiplied by 10000 to get 4 significant figures of
+        ;; accuracy. To get the value in the desired
+        ;; scale, these values are then divided by 10000^2 and
+        ;; multiplied by the km/h conversion value: 144.
 
-        ;; Hace TICK_VEL*T_int_overflow*10000
+        ;; Compute TICK_VEL*T_int_overflow*10000
         ldaa #218
         ldab TICK_VEL
         mul
-        tfr D,X                 ; Se libera RR1, para usarlo luego.
+        tfr D,X                 ; Free RR1 for later use.
 
-        ;; Hace (144*10000)
+        ;; Compute (144*10000)
         ldd #144
         ldy #10000
         emul
 
-        ;; Hace (144*10000)/(TICK_VEL*T_int_overflow*10000)
+        ;; Compute (144*10000)/(TICK_VEL*T_int_overflow*10000)
         ;;      = (144)/(TICK_VEL*T_int_overflow)
         ;;      = VELOC
         ediv
@@ -1097,22 +1097,22 @@ PH0_PULSADO:
         bclr BANDERAS,$02
 
 SALIR_CALCULAR:
-        bset PIFH,$FF          ; Limpia la interrupción.
+        bset PIFH,$FF          ; Clear the interrupt.
         rti
 
 ;***********************************************
 ; 	   BCD_BIN
 ;***********************************************
-        ;; Descripción:
-        ;; Esta subrutina ejecuta una conversión de los valores
-        ;; ingresados al teclado matricial en formato BCD, a formato
-        ;; binario.
+        ;; Description:
+        ;; This subroutine converts the values entered on the
+        ;; matrix keypad in BCD format to binary
+        ;; format.
 
-        ;; Entradas:
-        ;; Arreglo  Num_Array por memoria
+        ;; Inputs:
+        ;; Num_Array array via memory
 
-        ;; Salidas:
-        ;; Variable V_LIM por memoria
+        ;; Outputs:
+        ;; V_LIM variable via memory
 
 BCD_BIN:
 
@@ -1121,22 +1121,22 @@ BCD_BIN:
         pshb
         psha
 
-        ;; Se accede NUM_ARRAY por direccionamiento indexado de
-        ;; offset contante con J.
+        ;; NUM_ARRAY is accessed by constant-offset indexed
+        ;; addressing with J.
         ldx #NUM_ARRAY
 
-        ;; Primero se carga el MSNibble de BCD y seguidamente se convierte
-        ;; el mismo a BIN.
+        ;; First the MSNibble of BCD is loaded and then converted
+        ;; to BIN.
         ldaa 1,X+
         ldab #10
         mul
 
-        ;; Seguidamente se carga el LSNibble de BCD y se le suma el MSNibble ya
-        ;; convertido a BIN.
+        ;; Then the LSNibble of BCD is loaded and the already-converted
+        ;; MSNibble is added to it.
         ldaa 0,X
         aba
 
-        ;; El valor resultante se carga en V_LIM
+        ;; The resulting value is loaded into V_LIM
         staa V_LIM
 
         pula
@@ -1149,22 +1149,22 @@ BCD_BIN:
 ;***********************************************
 ; 	             TAREA_TECLADO
 ;***********************************************
-        ;; Descripción:
-        ;; Esta es una subrutina de administración, encargada de
-        ;; llamar a la subrutina MUX_TECLADOS para que capture una
-        ;; tecla presionada. Además, realiza las acciones relacionadas
-        ;; a suprimir rebotes y definir el concept de tecla retenida,
-        ;; leyendo la tecla hasta que la misma sea liberada.
+        ;; Description:
+        ;; This is a management subroutine in charge of
+        ;; calling MUX_TECLADOS to capture a
+        ;; pressed key. It also handles the actions related
+        ;; to debouncing and the held-key concept,
+        ;; reading the key until it is released.
 
-        ;; Entradas:
-        ;; Variable CONT_REB por memoria
-        ;; Variable TECLA por memoria, desde MUX_TECLADO
-        ;; Bandera TCL_LISTA por memoria
-        ;; Bandera TCL_LEIDA por memoria
+        ;; Inputs:
+        ;; CONT_REB variable via memory
+        ;; TECLA variable via memory, from MUX_TECLADO
+        ;; TCL_LISTA flag via memory
+        ;; TCL_LEIDA flag via memory
 
-        ;; Salidas:
-        ;; Variable TECLA_IN por memoria
-        ;; Bandera ARRAY_OK por memoria
+        ;; Outputs:
+        ;; TECLA_IN variable via memory
+        ;; ARRAY_OK flag via memory
 
 TAREA_TECLADO:
 
@@ -1173,75 +1173,75 @@ TAREA_TECLADO:
         pshb
         psha
 
-        tst CONT_REB                ; Si no termina proceso de
-        bne FIN_TAREA_TECLADO       ; rebote, descontar un rebote.
+        tst CONT_REB                ; If the debounce process is not
+        bne FIN_TAREA_TECLADO       ; done, count down one bounce.
 
-        ;; Con esto se garantiza que cada vez que se vaya a leer una
-        ;; tecla, si no se leyó la tecla, esta será $FF.
+        ;; This guarantees that each time a key is to be read,
+        ;; if the key was not read, it will be $FF.
         movb #$FF,TECLA
 
-        ;; Se lee una tecla y se consulta si la misma fue leída hay
-        ;; un valor válido de tecla leída.
+        ;; A key is read and it is checked whether a valid
+        ;; key value was read.
         jsr MUX_TECLADO
         brset TECLA,$FF,COMPROBAR_LISTA
 
-        ;; Si la tecla leída pareciera ser de un valor válido, se
-        ;; procede a consultar si la bandera de TECLA_LEIDA fue
-        ;; habilitada.
+        ;; If the read key seems to have a valid value,
+        ;; the TECLA_LEIDA flag is then checked to see if it was
+        ;; enabled.
 
 COMPROBAR_LEIDA:
-        ;; Consulta si TECLA_LEIDA=1. Esto es un inidicio de que se
-        ;; está ante la primera tecla leída.
+        ;; Check whether TECLA_LEIDA=1. This indicates that this
+        ;; is the first key read.
         brset BANDERAS+1,$02,COMPROBAR_VALIDA
 
-        ;; Si TECLA_LEIDA=0, se carga TECLA en TECLA_IN, se habilita
-        ;; TECLA_LEIDA y se procede a recargar el contador de rebotes
-        ;; CONT_REB.
+        ;; If TECLA_LEIDA=0, TECLA is loaded into TECLA_IN, TECLA_LEIDA
+        ;; is enabled, and the debounce counter CONT_REB is
+        ;; reloaded.
         movb TECLA,TECLA_IN
         bset BANDERAS+1,$02
         movb #10,CONT_REB
         bra FIN_TAREA_TECLADO
 
-        ;; Si la tecla pareciera tener un elemento válido, y la
-        ;; bandera de la TECLA_LEIDA=1 (primera tecla ya fue leída),
-        ;; se procede a comprobar si después de 10ms la tecla es la
-        ;; misma.
+        ;; If the key seems to have a valid element, and the
+        ;; TECLA_LEIDA flag=1 (first key already read),
+        ;; it is checked whether after 10ms the key is the
+        ;; same.
 COMPROBAR_VALIDA:
         ldaa TECLA
         cmpa TECLA_IN
         beq VALIDA
 
-        ;; Si la tecla que fue leída luego de los 10ms no tiene el
-        ;; valor medido previamnete (se midió un rebote o una señal
-        ;; diferente a los patrones esperados), se recargan TECLA y
-        ;; TECLA_IN con $FF.
+        ;; If the key read after 10ms does not have the
+        ;; previously measured value (a bounce or a signal
+        ;; different from the expected patterns was measured), TECLA and
+        ;; TECLA_IN are reloaded with $FF.
 NO_VALIDA:
         movb #$FF,TECLA
         movb #$FF,TECLA_IN
         bclr BANDERAS+1,$03
         bra FIN_TAREA_TECLADO
 
-        ;; Si la tecla leída luego del contador de rebotes es la
-        ;; misma que se leyó previamente, entonces se activa la
-        ;; bandera TECLA_LISTA.
+        ;; If the key read after the debounce counter is the
+        ;; same as the one previously read, then the
+        ;; TECLA_LISTA flag is set.
 VALIDA:
         bset BANDERAS+1,$01
         bra FIN_TAREA_TECLADO
 
-        ;; Si la tecla leída no pareciera ser de un valor válido, se
-        ;; procede a consultar si la bandera de TECLA_LISTA fue
-        ;; habilitada.
+        ;; If the read key does not seem to have a valid value,
+        ;; the TECLA_LISTA flag is then checked to see if it was
+        ;; enabled.
 COMPROBAR_LISTA:
         brclr BANDERAS+1,$01,FIN_TAREA_TECLADO
 
-        ;; Si TECLA_LISTA=1 (la tecla fue leída y validada), se
-        ;; procede a limpiar las banderas TCL_LISTA y TCL_LEIDA y se
-        ;; llama a FORMAR_ARRAY, para guardar la tecla leída.
+        ;; If TECLA_LISTA=1 (the key was read and validated),
+        ;; the TCL_LISTA and TCL_LEIDA flags are cleared and
+        ;; FORMAR_ARRAY is called to store the read key.
         bclr BANDERAS+1,$03
         jsr FORMAR_ARRAY
 
-        ;; Si TECLA_LISTA=0 (la tecla fue $FF y no es válida), se
-        ;; retorna a la subrutina principal.
+        ;; If TECLA_LISTA=0 (the key was $FF and is not valid),
+        ;; return to the main subroutine.
 FIN_TAREA_TECLADO:
 
         pula
@@ -1262,37 +1262,37 @@ FORMAR_ARRAY:
         pshb
         psha
 
-        ldx #NUM_ARRAY               ; Para acceder a NUM_ARRAY por direccionamiento
-        ldab CONT_TCL                ; indexado por acumulador.
+        ldx #NUM_ARRAY               ; To access NUM_ARRAY by accumulator-offset
+        ldab CONT_TCL                ; indexed addressing.
 
-        ;; Si la tecla es $0B salte a la secuencia de borrado
+        ;; If the key is $0B jump to the delete sequence
         ldaa TECLA_IN
         cmpa #$0B
         beq BORRAR
 
-        ;; Si la tecla es $0E cargue los valores a los LEDS.
+        ;; If the key is $0E load the values to the LEDS.
         cmpa #$0E
         beq ENTER
 
 CRG_TECLA:
-        cmpb MAX_TCL            ; Si la tecla a cargar es la tercera
-        bhs FIN_FORM_ARRY       ; y diferente de B o E, no la cargue.
+        cmpb MAX_TCL            ; If the key to load is the third
+        bhs FIN_FORM_ARRY       ; and not B or E, do not load it.
 
-        movb TECLA_IN,B,X       ; En caso cotrario, cárguela.
-        incb                    ; Cuando se carga siguiente tecla, se suma el índice.
+        movb TECLA_IN,B,X       ; Otherwise, load it.
+        incb                    ; When loading the next key, the index is added.
 
-        ;; cmpb MAX_TCL               ; Si el índice excede el rango
-        ;; beq REINICIAR_TCL       ; se reinicia.
+        ;; cmpb MAX_TCL               ; If the index exceeds the range
+        ;; beq REINICIAR_TCL       ; it is reset.
 
-        bra FIN_FORM_ARRY       ; Si no, se finaliza la secuencia.
+        bra FIN_FORM_ARRY       ; Otherwise, end the sequence.
 
 REINICIAR_TCL:
-        ;; Reinicio de VALOR para aceptar nuevos valores.
+        ;; Reset VALOR to accept new values.
         ldb #$00
 
 FIN_FORM_ARRY:
         stab CONT_TCL
-        movb #$FF,TECLA_IN      ; Hace TECLA=$FF
+        movb #$FF,TECLA_IN      ; Set TECLA=$FF
 
         pula
         pulb
@@ -1302,17 +1302,17 @@ FIN_FORM_ARRY:
         rts
 
 BORRAR:
-        ;; Si $0B se carga a TMP1, ignorar y cargar siguiente dato.
+        ;; If $0B is loaded to TMP1, ignore and load next datum.
         tstb
         beq FIN_FORM_ARRY
 
-        ;;  Si no se cumplen las condiciones antreriores, reducir el índice para
-        ;; cargar el dato.
+        ;;  If the previous conditions are not met, reduce the index to
+        ;; load the datum.
         decb
         movb #$FF,B,X
         bra FIN_FORM_ARRY
 ENTER:
-        ;; Si $0E se carga a TMP1, ignorar y cargar siguiente dato.
+        ;; If $0E is loaded to TMP1, ignore and load next datum.
         cmpb MAX_TCL
         blo FIN_FORM_ARRY
         bset BANDERAS+1,$04
@@ -1328,55 +1328,55 @@ MUX_TECLADO:
         psha
 
         ldx #TECLAS
-        movb #$EF,PORTA         ; Carga el primer patrón en PORTA para leer la
-                                ; tecla.
+        movb #$EF,PORTA         ; Load the first pattern into PORTA to read the
+                                ; key.
 
-        ;movb AUX_PA,PORTA      ; Se usa una variable auxiliar pues no se sabe
-                                ; qué tendrá el PORTA dentro.
+        ;movb AUX_PA,PORTA      ; An auxiliary variable is used since it is unknown
+                                ; what PORTA will hold inside.
 
-        movb #$00,PATRON        ; Se usa una variable para contabilizar la
-                                ; cantidad de patrones escritos en PORTA.
+        movb #$00,PATRON        ; A variable is used to count the
+                                ; number of patterns written to PORTA.
 
 SIG_PATRN:
-        ldab #$03               ; Se usa acumulador B para hacer el indexado al
-                                ; arreglo.
+        ldab #$03               ; Accumulator B is used to index the
+                                ; array.
 
-        ldaa PATRON             ; Si ya se escribió $EF, $DF, $BF, $7F en PORTA,
-        cmpa #$04               ; ponga finalice la subrutina.
+        ldaa PATRON             ; If $EF, $DF, $BF, $7F were already written to PORTA,
+        cmpa #$04               ; end the subroutine.
         beq FIN_MUX_TECLADO
-        mul                     ; Si no, haga D <- A*B para indexar el arreglo
-                                ; de valores a cargar.
+        mul                     ; Otherwise, do D <- A*B to index the array
+                                ; of values to load.
 
-        brclr PORTA,$01,LEER    ; Si se presionó un botón en la primera columna
-                                ; no le sume nada al offset.
+        brclr PORTA,$01,LEER    ; If a button in the first column was pressed,
+                                ; add nothing to the offset.
 
-        brclr PORTA,$02,A_1     ; Si se presionó un botón en la segunda columna
-                                ; sume 1 al offset.
+        brclr PORTA,$02,A_1     ; If a button in the second column was pressed,
+                                ; add 1 to the offset.
 
-        brclr PORTA,$04,A_2     ; Si se presionó un botón en la tercera columna
-                                ; sume 2 al offset.
+        brclr PORTA,$04,A_2     ; If a button in the third column was pressed,
+                                ; add 2 to the offset.
 CRGR_SGNT_PATRN:
 
-        ;; Si el patrón previo no generó una tecla presionada, incremente PATRON
-        ;; y rote el valor cargado en el puerto A.
+        ;; If the previous pattern produced no key press, increment PATRON
+        ;; and rotate the value loaded in port A.
         inc PATRON
-        sec                     ; Ya que se rotará el puerto A, se requiere que
-                                ; C esté en 1.
+        sec                     ; Since port A will be rotated, C is required
+                                ; to be 1.
         rol PORTA
         ;movb AUX_PA, PORTA
         bra SIG_PATRN
 
-        ;; Caso de botón en primera columna.
+        ;; Case of button in first column.
 A_1:
         incb
         bra LEER
 
-        ;; Caso de botón en segunda columna.
+        ;; Case of button in second column.
 A_2:
         addb #$02
 
 LEER:
-        ;; Trasdala el valor correspondiente a TECLA.
+        ;; Move the corresponding value into TECLA.
         movb B,X,TECLA
 
 FIN_MUX_TECLADO:
@@ -1393,70 +1393,70 @@ FIN_MUX_TECLADO:
 ;***********************************************
 ;          PATRON_LEDS
 ;***********************************************
-        ;; Descripción:
-        ;; Esta subrutina es la encargada de actualizar el valor de
-        ;; LEDS con el patrón de barrido de PB7-PB3, siempre que la
-        ;; bandera ALERTA=1. Si ALERTA=0, apaga PB7 y PB3.
+        ;; Description:
+        ;; This subroutine is in charge of updating the LEDS value
+        ;; with the PB7-PB3 sweep pattern, whenever the
+        ;; ALERTA flag=1. If ALERTA=0, it turns off PB7 and PB3.
 
-        ;; Entradas:
-        ;; Bandera ALERTA por memoria
+        ;; Inputs:
+        ;; ALERTA flag via memory
 
-        ;; Salidas:
-        ;; Variable LEDS por memoria
+        ;; Outputs:
+        ;; LEDS variable via memory
 
 PATRON_LEDS:
-        ;; Apila acumuladores e índices usados en subrutina,
-        ;; por si se usaba en otras subrutinas.
+        ;; Push accumulators and indices used in the subroutine,
+        ;; in case they were used in other subroutines.
         pshx
         pshy
         psha
         pshb
 
 
-        ;; Ya que los bits de modo son ajenos a los de alerta, los
-        ;; mismos se deben guardar y reestablecer cuando se haya
-        ;; modificado los bits de alerta.
+        ;; Since the mode bits are independent of the alert bits, they
+        ;; must be saved and restored once the alert bits have
+        ;; been modified.
         ldab LEDS
-        andb #$07               ; Se extrae los bits de modo.
-        pshb                    ; Se apila los LEDS de modo.
+        andb #$07               ; Extract the mode bits.
+        pshb                    ; Push the mode LEDS.
 
-        ;; Se consulta si ALERTA=1.
+        ;; Check whether ALERTA=1.
         brclr BANDERAS+1,$10,LEDS_APAGADOS
 
-        ;; Si ALERTA=1, se inicia la secuencia.
+        ;; If ALERTA=1, start the sequence.
         ldaa LEDS
-        anda #$F8               ; Se carga bits de alerta en R1.
+        anda #$F8               ; Load the alert bits into R1.
 
-        lsra                    ; Si no se ha llegado a máximo,
-                                ; desplazar el registro.
+        lsra                    ; If maximum has not been reached,
+                                ; shift the register.
 
-        ;; Se consulta si el valor de los bits de alerta llegaron a
-        ;; máximo valor.
-        cmpa #$04               ; Si se llega a máximo, reiniciar el
-        ble REINICIAR_CUENTA    ; patrón.
+        ;; Check whether the alert bits have reached
+        ;; their maximum value.
+        cmpa #$04               ; If maximum is reached, reset the
+        ble REINICIAR_CUENTA    ; pattern.
 
 
-        bra RECUPERAR_BITS_MODO ; Se recuperan bits de modo.
+        bra RECUPERAR_BITS_MODO ; Restore the mode bits.
 
-        ;; Si ALERTA=0, se apaga los bits de alerta.
+        ;; If ALERTA=0, turn off the alert bits.
 REINICIAR_CUENTA:
-        ldaa #$80               ; Se coloca un 1 en el MSB.
+        ldaa #$80               ; Place a 1 in the MSB.
 
-        bra RECUPERAR_BITS_MODO ; Se recuperan bits de modo.
+        bra RECUPERAR_BITS_MODO ; Restore the mode bits.
 
-        ;; Si ALERTA=0, se apaga los LEDs.
+        ;; If ALERTA=0, turn off the LEDs.
 LEDS_APAGADOS:
-        lda #$00                ; Apaga los LEDs.
+        lda #$00                ; Turn off the LEDs.
 
-        ;; Aquí se restablece los bits de modo.
+        ;; The mode bits are restored here.
 RECUPERAR_BITS_MODO:
-        pulb                    ; Se desapila los LEDS de modo.
+        pulb                    ; Pull the mode LEDS.
 
-        aba                     ; Agrupa los bits de modo y de alerta,
-        staa LEDS                ; y se guarda su valor en LEDS.
+        aba                     ; Combine the mode and alert bits,
+        staa LEDS                ; and store the value in LEDS.
 
 FIN_PATRON_LEDS:
-        ;; Se retornan acumuladores e índices.
+        ;; Restore accumulators and indices.
 
         pulb
         pula
@@ -1469,24 +1469,24 @@ FIN_PATRON_LEDS:
 ;***********************************************
 ;          CONV_BIN_BCD
 ;***********************************************
-        ;; Descripción:
-        ;; Esta subrutina implementa el manejo de la convarsió de
-        ;; binario a BCD. Es la encargada de llamar a la subrutina
-        ;; de conversión BIN_BCD, para lo cuál se envían las
-        ;; direcciones de BIN1 BIN2 por el índice X. Además, esta
-        ;; es la encargada de escribir una $B en los dígitos que deben
-        ;; permanecer apagados.
+        ;; Description:
+        ;; This subroutine handles the binary-to-BCD
+        ;; conversion. It is in charge of calling the
+        ;; BIN_BCD conversion subroutine, for which the
+        ;; BIN1 BIN2 addresses are passed via index X. Also, it
+        ;; is in charge of writing a $B in the digits that must
+        ;; stay off.
 
-        ;; Entradas:
-        ;; Variable BIN1 por memoria
-        ;; Variable BIN2 por memoria
-        ;; Variable BCD_L por memoria
+        ;; Inputs:
+        ;; BIN1 variable via memory
+        ;; BIN2 variable via memory
+        ;; BCD_L variable via memory
 
-        ;; Salidas:
-        ;; Dirección de variable BIN1 por índice X
-        ;; Dirección de variable BIN2 por índice X
-        ;; Variable BCD1 por memoria
-        ;; Variable BCD2 por memoria
+        ;; Outputs:
+        ;; BIN1 variable address via index X
+        ;; BIN2 variable address via index X
+        ;; BCD1 variable via memory
+        ;; BCD2 variable via memory
 
 CONV_BIN_BCD:
         pshx
@@ -1494,38 +1494,38 @@ CONV_BIN_BCD:
         psha
         pshb
 
-        ;; Se consulta si BIN1 contiene $BB
+        ;; Check whether BIN1 contains $BB
         brset BIN1,$BB,CONV_BIN2
 
-        ;; Si no contiene $BB, convierte la variable a BCD.
-        ldx #BIN1               ; Se pasa la dirección de la variable
-                                ; a convertir por el índice X.
+        ;; If it does not contain $BB, convert the variable to BCD.
+        ldx #BIN1               ; The address of the variable to convert
+                                ; is passed via index X.
 
-        jsr BIN_BCD             ; Llama subrutina BIN_BCD.
+        jsr BIN_BCD             ; Call BIN_BCD subroutine.
 
-        movb BCD_L,BCD2         ; Se recibe el valor de BCD2 a través
-                                ; de la variable BCD_L.
+        movb BCD_L,BCD2         ; The BCD2 value is received through
+                                ; the BCD_L variable.
 
 
         ;; ldaa BCD_L
         ;; anda $0F
         ;; tbne A,BCD
 
-        ;; Si contiene $BB, BIN1 permanece intacta y se procede a
-        ;; cargar el valor respectivo de BIN2.
+        ;; If it contains $BB, BIN1 stays intact and the
+        ;; respective BIN2 value is loaded.
 CONV_BIN2:
 
-        ;; Se consulta si BIN1 contiene $BB
+        ;; Check whether BIN1 contains $BB
         brset BIN2,$BB,FIN_CONV_BIN_BCD
 
-        ;; Si no contiene $BB, convierte la variable a BCD.
-        ldx #BIN2               ; Se pasa la dirección de la variable
-                                ; a convertir por el índice X.
+        ;; If it does not contain $BB, convert the variable to BCD.
+        ldx #BIN2               ; The address of the variable to convert
+                                ; is passed via index X.
 
-        jsr BIN_BCD             ; Llama subrutina BIN_BCD.
+        jsr BIN_BCD             ; Call BIN_BCD subroutine.
 
-        movb BCD_L,BCD1         ; Se recibe el valor de BCD1 a través
-                                ; de la variable BCD_L.
+        movb BCD_L,BCD1         ; The BCD1 value is received through
+                                ; the BCD_L variable.
 
 FIN_CONV_BIN_BCD:
         pulb
@@ -1537,17 +1537,17 @@ FIN_CONV_BIN_BCD:
 ;***********************************************
 ;          BIN_BCD
 ;***********************************************
-        ;; Descripción:
-        ;; Esta subrutina implementa la conversión de binario a BCD.
-        ;; Para ello se implementa el algoritmo visto en clase, el cual
-        ;; consiste en 4 pasos principalmente:
+        ;; Description:
+        ;; This subroutine implements binary-to-BCD conversion.
+        ;; It uses the algorithm seen in class, which
+        ;; mainly consists of 4 steps:
 
-        ;; 1) Se carga el número binario en BIN.
-        ;; 2) Se desplaza sucesivamente hacia la izquierda el número
-        ;; BIN.
-        ;; 3) Se analizan los cuartetos resultantes del desplazamiento.
-        ;; 4) Si algún cuarteto es mayor o igual que 5, antes del
-        ;; último desplazamiento, se le debe sumar 4 a ese cuarteto.
+        ;; 1) Load the binary number into BIN.
+        ;; 2) Shift the BIN number left successively.
+        ;;
+        ;; 3) Analyze the nibbles resulting from the shift.
+        ;; 4) If any nibble is greater than or equal to 5, before the
+        ;; last shift, 4 must be added to that nibble.
 
         ;-------- SP
         ;
@@ -1557,77 +1557,77 @@ FIN_CONV_BIN_BCD:
         ; LOW
         ;--------
 
-        ;; Entradas:
-        ;; Dirección de variable BIN1 por índice X
-        ;; Dirección de variable BIN2 por índice X
+        ;; Inputs:
+        ;; BIN1 variable address via index X
+        ;; BIN2 variable address via index X
 
-        ;; Salidas:
-        ;; Variable BCD1 por memoria
-        ;; Variable BCD2 por memoria
-        ;; Variable BCD_L por memoria
-        ;; Variable BCD_H por memoria
+        ;; Outputs:
+        ;; BCD1 variable via memory
+        ;; BCD2 variable via memory
+        ;; BCD_L variable via memory
+        ;; BCD_H variable via memory
 
 BIN_BCD:
-        ;; Se guarda el contexto de pila para evitar problemas si
-        ;; se estaban empleando los registros previo a la subrutna.
+        ;; The stack context is saved to avoid problems if
+        ;; the registers were in use before the subroutine.
         psha
         pshb
         pshx
 
-        ldaa 0,X                ; Carga el valor a covertir, en R1.
-        ldab #$07               ; Contador de bits traladados.
-        movb #$00,BCD_L         ; Incializa BCD_L en cero.
-        movb #$00,BCD_H         ; Incializa BCD_H en cero.
+        ldaa 0,X                ; Load the value to convert into R1.
+        ldab #$07               ; Counter of shifted bits.
+        movb #$00,BCD_L         ; Initialize BCD_L to zero.
+        movb #$00,BCD_H         ; Initialize BCD_H to zero.
 
-        ;; Aquí inicia conversión de CONT_FREE
+        ;; Conversion of CONT_FREE starts here
 NEXT_BIT_BCD:
-        lsla                    ; Se desplaza un bit de R1.
-        rol BCD_L               ; C se carga BCD_L.
-        rol BCD_H               ; C se carga BCD_H.
+        lsla                    ; Shift one bit of R1.
+        rol BCD_L               ; C is loaded into BCD_L.
+        rol BCD_H               ; C is loaded into BCD_H.
 
-        ;; Aqui se carga R1 a TEMP
-        psha                    ; Se emplea SP-1 como variable TEMP.
+        ;; R1 is loaded into TEMP here
+        psha                    ; SP-1 is used as the TEMP variable.
         ldaa BCD_L
-        anda #$0F               ; Se busca si el nibble menos
-        cmpa #$05               ; significativo de BCD_L tine un 5.
+        anda #$0F               ; Check whether the least significant
+        cmpa #$05               ; nibble of BCD_L has a 5.
 
-        blt NOT_5_ON_L_BCD      ; Si no lo tiene, se busca en el
-                                ; nibble más significativo.
+        blt NOT_5_ON_L_BCD      ; If not, check the most
+                                ; significant nibble.
 
-        adda #$03               ; Si lo tiene, se le suma 3 al nibble
-                                ; menos significativo.
+        adda #$03               ; If it does, add 3 to the least
+                                ; significant nibble.
 NOT_5_ON_L_BCD:
-        ;; Aqui se carga R1 a LOW
-        psha                    ; Se emplea SP-1 como variable TEMP.
+        ;; R1 is loaded into LOW here
+        psha                    ; SP-1 is used as the TEMP variable.
         ldaa BCD_L
-        anda #$F0               ; Se busca si el nibble más
-        cmpa #$50               ; significativo de BCD_L tine un 5.
+        anda #$F0               ; Check whether the most significant
+        cmpa #$50               ; nibble of BCD_L has a 5.
 
-        blt NOT_5_ON_H_BCD      ; Si no lo tiene, se avanza con el
-                                ; algoritmo.
+        blt NOT_5_ON_H_BCD      ; If not, continue with the
+                                ; algorithm.
 
-        adda #$30               ; Si lo tiene, se le suma 3 al nibble
-                                ; más significativo.
+        adda #$30               ; If it does, add 3 to the most
+                                ; significant nibble.
 
 NOT_5_ON_H_BCD:
 
-        adda 0,SP               ; Aquí se suma LOW a R1.
-        sta BCD_L               ; y se carga el resultado a BCD_L.
+        adda 0,SP               ; LOW is added to R1 here.
+        sta BCD_L               ; and the result is loaded into BCD_L.
 
-        ins                     ; Maneja la pila para apuntar a TEMP.
-        pula                    ; Se carga TEMP a R1.
+        ins                     ; Adjust the stack to point to TEMP.
+        pula                    ; Load TEMP into R1.
 
-        dbeq B,FINALIZAR_BCD    ; Si se desplazaron todos los bits, ir
-                                ; al final.
+        dbeq B,FINALIZAR_BCD    ; If all bits were shifted, go
+                                ; to the end.
 
-        bra NEXT_BIT_BCD        ; Si no, seguir con el algoritmo.
+        bra NEXT_BIT_BCD        ; Otherwise, continue with the algorithm.
 FINALIZAR_BCD:
-        ;; Se desplaza el último bit en binario.
+        ;; Shift the last bit in binary.
         lsla
         rol BCD_L
         rol BCD_H
 
-        ;; Se restablece el contexto de pila.
+        ;; Restore the stack context.
         pulx
         pulb
         pula
@@ -1637,71 +1637,71 @@ FINALIZAR_BCD:
 ;***********************************************
 ;          BCD_7SEG
 ;***********************************************
-        ;; Descripción:
-        ;; Esta subrutina implementa el manejo de la conversión de
-        ;; BCD a 7SEG. Para ello se identifica el contenido de los
-        ;; valores a cargar en BCD y a partir de los mismos se
-        ;; determina un ofsset que sirve para indexar una tabla que
-        ;; contiene los valores válidos a cargarse en los 7SEG de
-        ;; acuerdo al valor en BCD.
+        ;; Description:
+        ;; This subroutine handles the BCD-to-7SEG
+        ;; conversion. It identifies the contents of the
+        ;; values to load in BCD and from them
+        ;; determines an offset to index a table that
+        ;; holds the valid values to load into the 7SEG
+        ;; according to the BCD value.
 
-        ;; Entradas:
-        ;; Variable BIN1 por memoria
-        ;; Variable BIN2 por memoria
+        ;; Inputs:
+        ;; BIN1 variable via memory
+        ;; BIN2 variable via memory
 
-        ;; Salidas:
-        ;; Variable DISP1 por memoria
-        ;; Variable DISP2 por memoria
-        ;; Variable DISP3 por memoria
-        ;; Variable DISP4 por memoria
+        ;; Outputs:
+        ;; DISP1 variable via memory
+        ;; DISP2 variable via memory
+        ;; DISP3 variable via memory
+        ;; DISP4 variable via memory
 
 BCD_7SEG:
-        ;; Apila acumuladores e índices usados en subrutina,
-        ;; por si se usaba en otras subrutinas.
+        ;; Push accumulators and indices used in the subroutine,
+        ;; in case they were used in other subroutines.
         pshx
         psha
 
-        ldx #SEGMENT            ; Se carga la dirección de SEGMENT en
-                                ; X para accederlo con
-                                ; direccioneamiento indexado con
-                                ; offset por acumulador.
+        ldx #SEGMENT            ; Load the SEGMENT address into
+                                ; X to access it with
+                                ; accumulator-offset indexed
+                                ; addressing.
 
 
-        ;; Prepara DISP3
+        ;; Prepare DISP3
         ldaa BCD1
-        anda #$0F               ; Se extrae el nibble menos
-        psha                    ; significativo de BCD1 y se apila.
+        anda #$0F               ; Extract the least significant
+        psha                    ; nibble of BCD1 and push it.
 
-        ;; Prepara DISP1
+        ;; Prepare DISP1
         ldaa BCD2
-        anda #$0F               ; Se extrae el nibble menos
-        psha                    ; significativo de BCD2 y se apila.
+        anda #$0F               ; Extract the least significant
+        psha                    ; nibble of BCD2 and push it.
 
-        ;; Prepara DISP4
-        ldaa BCD1               ; Se extrae el nibble más significativo
-        lsra                    ; de BCD1. Para ello se divide el
-        lsra                    ; dígito entre 16.
+        ;; Prepare DISP4
+        ldaa BCD1               ; Extract the most significant nibble
+        lsra                    ; of BCD1. To do so, the digit is
+        lsra                    ; divided by 16.
         lsra
         lsra
-        psha                    ; Una vez dividido, se apila.
+        psha                    ; Once divided, it is pushed.
 
-        ;; Prepara DISP2
-        ldaa BCD2               ; Se extrae el nibble más significativo
-        lsra                    ; de BCD2. Para ello se divide el
-        lsra                    ; dígito entre 16.
+        ;; Prepare DISP2
+        ldaa BCD2               ; Extract the most significant nibble
+        lsra                    ; of BCD2. To do so, the digit is
+        lsra                    ; divided by 16.
         lsra
         lsra
-        psha                    ; Una vez dividido, se apila.
+        psha                    ; Once divided, it is pushed.
 
-        ;; Carga los valores de los dígitos
+        ;; Load the digit values
         pula
-        movb A,X,DISP2           ; Se carga DISP2.
+        movb A,X,DISP2           ; Load DISP2.
         pula
-        movb A,X,DISP4           ; Se carga DISP4.
+        movb A,X,DISP4           ; Load DISP4.
         pula
-        movb A,X,DISP1           ; Se carga DISP1.
+        movb A,X,DISP1           ; Load DISP1.
         pula
-        movb A,X,DISP3           ; Se carga DISP3.
+        movb A,X,DISP3           ; Load DISP3.
 
 
         ldaa BIN1
@@ -1730,7 +1730,7 @@ ASK_AA_BIN2:
         movb #$40,DISP4
 
 CONVERTIR:
-        ;; Se retornan acumuladores e índices.
+        ;; Restore accumulators and indices.
         pula
         pulx
         rts
@@ -1738,45 +1738,45 @@ CONVERTIR:
 ;***********************************************
 ;          INICIALIZAR_LCD
 ;***********************************************
-        ;; Descripción:
-        ;; Esta subrutina implementa la inicialización de la pantalla
-        ;; LCD. Para ello, se envía una serie de comandos requeridos
-        ;; para este propósito.
+        ;; Description:
+        ;; This subroutine initializes the LCD
+        ;; display. It sends a series of commands required
+        ;; for this purpose.
 
-        ;; Entradas:
-        ;; Arreglo iniDsp por memoria
-        ;; Variable BIN2 por memoria
+        ;; Inputs:
+        ;; iniDsp array via memory
+        ;; BIN2 variable via memory
 
-        ;; Salidas:
+        ;; Outputs:
 
 INICIALIZAR_LCD:
 
-        ;; Apila acumuladores e índices usados en subrutina,
-        ;; por si se usaba en otras subrutinas.
+        ;; Push accumulators and indices used in the subroutine,
+        ;; in case they were used in other subroutines.
         pshx
         pshy
         psha
         pshb
 
-        ldx #iniDsp             ; Para acceder iniDsp por
-                                ; direccionamiento indexado con offset
-                                ; constante.
+        ldx #iniDsp             ; To access iniDsp by
+                                ; constant-offset indexed
+                                ; addressing.
 
 SEGUIR_IniDSP:
         ldaa 0,X
-        jsr SEND_COMMAND        ; Envía comando De iniDsp.
+        jsr SEND_COMMAND        ; Send iniDsp command.
         movb D40uS,Cont_Delay
-        jsr Delay               ; Espera 40us.
+        jsr Delay               ; Wait 40us.
         inx
-        cpx #iniDsp+4           ; Si no se ha enviado todo iniDsp,
-        bne SEGUIR_IniDSP       ; síga enviando.
+        cpx #iniDsp+4           ; If not all of iniDsp has been sent,
+        bne SEGUIR_IniDSP       ; keep sending.
 
         ldaa #$01
-        jsr SEND_COMMAND        ;Envía comando de Clear Display.
+        jsr SEND_COMMAND        ;Send Clear Display command.
         movb D2mS,Cont_Delay
-        jsr Delay               ;Espera 2ms.
+        jsr Delay               ;Wait 2ms.
 
-        ;; Se retornan acumuladores e índices.
+        ;; Restore accumulators and indices.
         pulb
         pula
         puly
@@ -1787,67 +1787,67 @@ SEGUIR_IniDSP:
 ;***********************************************
 ;          CARGAR_LCD
 ;***********************************************
-        ;; Descripción:
-        ;; Esta subrutina implementa la carga de mensajes a la pantalla
-        ;; LCD. Esta subrutina se encarga de manejar la secuencia de
-        ;; carga de mensajes y datos, necesaria para la correcta
-        ;; escritura del mensaje enviado, a la LCD.
+        ;; Description:
+        ;; This subroutine handles loading messages to the LCD
+        ;; display. It manages the sequence of
+        ;; loading messages and data, needed for correct
+        ;; writing of the sent message to the LCD.
 
-        ;; Entradas:
-        ;; Constante ADD_L1 por memoria
-        ;; Constante ADD_L2 por memoria
-        ;; Arreglo MSG1 por acumulador X
-        ;; Arreglo MSG2 por acumulador X
+        ;; Inputs:
+        ;; ADD_L1 constant via memory
+        ;; ADD_L2 constant via memory
+        ;; MSG1 array via accumulator X
+        ;; MSG2 array via accumulator X
 
-        ;; Salidas:
+        ;; Outputs:
 
 CARGAR_LCD:
 
-        ;; Apila acumuladores e índices usados en subrutina,
-        ;; por si se usaba en otras subrutinas.
+        ;; Push accumulators and indices used in the subroutine,
+        ;; in case they were used in other subroutines.
         pshx
         pshy
         psha
         pshb
 
-        ldaa ADD_L1             ; Se envía el comando ADD_L1 para poner
-        jsr SEND_COMMAND        ; el cursor en línea 1.
+        ldaa ADD_L1             ; Send the ADD_L1 command to put
+        jsr SEND_COMMAND        ; the cursor on line 1.
         movb D40uS,Cont_Delay
-        jsr Delay               ; Esperar 40us
+        jsr Delay               ; Wait 40us
 LOAD_MSG1:
-        ;; Se espera el mensaje correspondiente a la la línea 1 por
-        ;; el índice X. Se carga el mensaje byte a byte. Cuando se
-        ;; recibe el caracter de fin de mensaje: EOM, se termina la
-        ;; comunicación.
+        ;; The message for line 1 is awaited via
+        ;; index X. The message is loaded byte by byte. When the
+        ;; end-of-message character EOM is received, the
+        ;; communication ends.
         ldaa 1,X+
-        cmpa #EOM               ; Si se recibe EOM, se inicial la
-        beq IS_EOM_MSG1         ; secuencia de configuración de L2.
+        cmpa #EOM               ; If EOM is received, start the
+        beq IS_EOM_MSG1         ; L2 configuration sequence.
 
-        jsr SEND_DATA           ; Si no, se envía char de MSGL1.
+        jsr SEND_DATA           ; Otherwise, send MSGL1 char.
         movb D40uS,Cont_Delay
-        jsr Delay               ;Se espera 40us
+        jsr Delay               ;Wait 40us
         bra LOAD_MSG1
 IS_EOM_MSG1:
-        ldaa ADD_L2             ; Se envía el comando ADD_L2 para poner
-        jsr SEND_COMMAND        ; el cursor en línea 2.
+        ldaa ADD_L2             ; Send the ADD_L2 command to put
+        jsr SEND_COMMAND        ; the cursor on line 2.
         movb D40uS,Cont_Delay
-        jsr Delay               ; Se espera 40us
+        jsr Delay               ; Wait 40us
 LOAD_MSG2:
-        ;; Se espera el mensaje correspondiente a la la línea 2 por
-        ;; el índice Y. Se carga el mensaje byte a byte. Cuando se
-        ;; recibe el caracter de fin de mensaje: EOM, se termina la
-        ;; comunicación.
+        ;; The message for line 2 is awaited via
+        ;; index Y. The message is loaded byte by byte. When the
+        ;; end-of-message character EOM is received, the
+        ;; communication ends.
         ldaa 1,Y+
-        cmpa #EOM               ; Si se recibe EOM, se finaliza la
-        beq IS_EOM_MSG2         ; subruitna.
+        cmpa #EOM               ; If EOM is received, end the
+        beq IS_EOM_MSG2         ; subroutine.
 
-        jsr SEND_DATA           ; Si no, se envía char de MSG2.
+        jsr SEND_DATA           ; Otherwise, send MSG2 char.
         movb D40uS,Cont_Delay
-        jsr Delay               ; Se espera 40us
+        jsr Delay               ; Wait 40us
         bra LOAD_MSG2
 
 IS_EOM_MSG2:
-        ;; Se retornan acumuladores e índices.
+        ;; Restore accumulators and indices.
         pulb
         pula
         puly
@@ -1858,62 +1858,62 @@ IS_EOM_MSG2:
 ;***********************************************
 ;          SEND_COMMAND
 ;***********************************************
-        ;; Descripción:
-        ;; Esta subrutina envía un comando a la pantalla LCD. El
-        ;; comando a ser enviado es recibido por el acumulador A. La
-        ;; subrutina envía primero la parte alta del byte y luego la
-        ;; parte baja. Dichos nibbles son recibidos por el LCD en el
-        ;; PORTK.5-PORTK.2. La subrutina se encarga de controlar la
-        ;; temporización. Al enviar cada nibble genera un pulso de
-        ;; 250usa en PORTK.1 (EN). Esta subrutina hace PORTK.0=1 (RS).
+        ;; Description:
+        ;; This subroutine sends a command to the LCD display. The
+        ;; command to send is received in accumulator A. The
+        ;; subroutine sends the high part of the byte first, then the
+        ;; low part. Those nibbles are received by the LCD on
+        ;; PORTK.5-PORTK.2. The subroutine controls the
+        ;; timing. Sending each nibble generates a
+        ;; 250us pulse on PORTK.1 (EN). This subroutine sets PORTK.0=1 (RS).
 
-        ;; Entradas:
-        ;; Comando  por acumulador A
-        ;; Variable BIN2 por memoria
+        ;; Inputs:
+        ;; Command via accumulator A
+        ;; BIN2 variable via memory
 
-        ;; Salidas:
+        ;; Outputs:
         ;; PORTK.5-PORTK.0
 
 SEND_COMMAND:
 
-        ;; Apila acumuladores e índices usados en subrutina,
-        ;; por si se usaba en otras subrutinas.
+        ;; Push accumulators and indices used in the subroutine,
+        ;; in case they were used in other subroutines.
         pshx
         pshy
         psha
         pshb
 
-        ;; Se carga el nibble más significativo en R1.
+        ;; Load the most significant nibble into R1.
         psha
         anda #$F0
         lsra
         lsra
 
-        ;; Se carga el nibble más significativo en PORTK.
+        ;; Load the most significant nibble into PORTK.
         sta PORTK
 
-        bclr PORTK,#$01         ; Se hace RS=0 (comando).
-        bset PORTK,#$02         ; Se hace EN=1.
+        bclr PORTK,#$01         ; Set RS=0 (command).
+        bset PORTK,#$02         ; Set EN=1.
         movb D250uS,Cont_Delay
-        jsr Delay               ; Se espera 250us.
-        bclr PORTK,#$01         ; Se hace EN=0.
+        jsr Delay               ; Wait 250us.
+        bclr PORTK,#$01         ; Set EN=0.
 
-        ;; Se carga el nibble menos significativo en R1.
+        ;; Load the least significant nibble into R1.
         pula
         anda #$0F
         lsla
         lsla
 
-        ;; Se carga el nibble menos significativo en PORTK.
+        ;; Load the least significant nibble into PORTK.
         sta PORTK
 
-        bclr PORTK,#$01         ; Se hace RS=0 (comando).
-        bset PORTK,#$02         ; Se hace EN=1.
+        bclr PORTK,#$01         ; Set RS=0 (command).
+        bset PORTK,#$02         ; Set EN=1.
         movb D250uS,Cont_Delay
-        jsr Delay               ; Se espera 250us.
-        bclr PORTK,#$02         ; Se hace EN=0.
+        jsr Delay               ; Wait 250us.
+        bclr PORTK,#$02         ; Set EN=0.
 
-        ;; Se retornan acumuladores e índices.
+        ;; Restore accumulators and indices.
         pulb
         pula
         puly
@@ -1925,60 +1925,60 @@ SEND_COMMAND:
 ;***********************************************
 ;          SEND_DATA
 ;***********************************************
-        ;; Descripción:
-        ;; Esta subrutina envía un comando a la pantalla LCD. El
-        ;; comando a ser enviado es recibido por el acumulador A. La
-        ;; subrutina envía primero la parte alta del byte y luego la
-        ;; parte baja. Dichos nibbles son recibidos por el LCD en el
-        ;; PORTK.5-PORTK.2. La subrutina se encarga de controlar la
-        ;; temporización. Al enviar cada nibble genera un pulso de
-        ;; 250usa en PORTK.1 (EN). Esta subrutina hace PORTK.0=1 (RS).
+        ;; Description:
+        ;; This subroutine sends a command to the LCD display. The
+        ;; command to send is received in accumulator A. The
+        ;; subroutine sends the high part of the byte first, then the
+        ;; low part. Those nibbles are received by the LCD on
+        ;; PORTK.5-PORTK.2. The subroutine controls the
+        ;; timing. Sending each nibble generates a
+        ;; 250us pulse on PORTK.1 (EN). This subroutine sets PORTK.0=1 (RS).
 
-        ;; Entradas:
-        ;; Comando  por acumulador A
-        ;; Variable BIN2 por memoria
+        ;; Inputs:
+        ;; Command via accumulator A
+        ;; BIN2 variable via memory
 
-        ;; Salidas:
+        ;; Outputs:
         ;; PORTK.5-PORTK.0
 
 SEND_DATA:
 
-        ;; Apila acumuladores e índices usados en subrutina,
-        ;; por si se usaba en otras subrutinas.
+        ;; Push accumulators and indices used in the subroutine,
+        ;; in case they were used in other subroutines.
         pshx
         pshy
         psha
         pshb
 
-        ;; Se carga el nibble más significativo en R1.
+        ;; Load the most significant nibble into R1.
         psha
         anda #$F0
         lsra
         lsra
 
-        ;; Se carga el nibble más significativo en PORTK.
+        ;; Load the most significant nibble into PORTK.
         sta PORTK
 
-        bset PORTK,#$03         ; Se hace RS=0 (comando) y EN=1.
+        bset PORTK,#$03         ; Set RS=0 (command) and EN=1.
         movb D250uS,Cont_Delay
-        jsr Delay               ; Se espera 250us.
-        bclr PORTK,#$01         ; Se hace EN=0.
+        jsr Delay               ; Wait 250us.
+        bclr PORTK,#$01         ; Set EN=0.
 
-        ;; Se carga el nibble menos significativo en R1.
+        ;; Load the least significant nibble into R1.
         pula
         anda #$0F
         lsla
         lsla
 
-        ;; Se carga el nibble menos significativo en PORTK.
+        ;; Load the least significant nibble into PORTK.
         sta PORTK               ;
-        bset PORTK,#$03         ; Se hace RS=0 (comando) y EN=1.
+        bset PORTK,#$03         ; Set RS=0 (command) and EN=1.
         movb D250uS,Cont_Delay
-        jsr Delay               ; Se espera 250us.
-        bclr PORTK,#$02         ; Se hace EN=0.
+        jsr Delay               ; Wait 250us.
+        bclr PORTK,#$02         ; Set EN=0.
 
 
-        ;; Se retornan acumuladores e índices.
+        ;; Restore accumulators and indices.
         pulb
         pula
         puly
@@ -1990,16 +1990,16 @@ SEND_DATA:
 ;***********************************************
 ;          DELAY
 ;***********************************************
-        ;; Descripción:
-        ;; Esta subrutina espera a que OC4_ISR decremente hasta cero
-        ;; el CONT_DELAY. Dicho CONT_DELAY es cargado por la subrutina
-        ;; que llame a DELAY, así la subrutina funciona para cualquier
-        ;; retardo que pueda cargarse en un byte.
+        ;; Description:
+        ;; This subroutine waits for OC4_ISR to decrement
+        ;; CONT_DELAY to zero. That CONT_DELAY is loaded by the subroutine
+        ;; that calls DELAY, so the subroutine works for any
+        ;; delay that fits in a byte.
 
-        ;; Entradas:
-        ;; Variable CONT_DELAY por memoria
+        ;; Inputs:
+        ;; CONT_DELAY variable via memory
 
-        ;; Salidas:
+        ;; Outputs:
 
 DELAY:
         pshx
@@ -2008,11 +2008,11 @@ DELAY:
         pshb
 
 DELAY_RET:
-        ;; Se espera a que CONT_DELAY llegue a cero.
+        ;; Wait until CONT_DELAY reaches zero.
         tst CONT_DELAY
         bne DELAY_RET
 
-        ;; Cuando llega a cero, retorna.
+        ;; When it reaches zero, return.
 
         pulb
         pula

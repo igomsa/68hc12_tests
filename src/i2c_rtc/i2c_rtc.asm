@@ -1,29 +1,29 @@
 ;***********************************************
-;                  TAREA 7
+;                  ASSIGNMENT 7
 ;***********************************************
 
 #include "../../include/registers.inc"
 
 ;***********************************************
-; REDIRECCIONAMIENTO DEL VECTOR DE INTERRUPCION
+; INTERRUPT VECTOR REDIRECTION
 ;***********************************************
-        org $3E40               ; Vec. interrupción I2C
+        org $3E40               ; I2C interrupt vector
         dw I2C_ISR
 
-        org $3E4C               ; Vec. interrupción IRQ
+        org $3E4C               ; IRQ interrupt vector
         dw PTH_ISR
 
-        org $3E70               ; Vec. interrupción RTI
+        org $3E70               ; RTI interrupt vector
         dw RTI_ISR
 
-        org $3E64               ; Vec. interrupcón por Comparador Ch5.
+        org $3E64               ; Comparator Ch5 interrupt vector.
         dw OC5_ISR
 
-        org $3E66               ; Vec. interrupcón por Comparador Ch4.
+        org $3E66               ; Comparator Ch4 interrupt vector.
         dw OC4_ISR
 
 ;***********************************************
-; 	       DECLARACION DE MEMORIA
+; 	       MEMORY DECLARATION
 ;***********************************************
 
 		org $1000
@@ -51,7 +51,7 @@ ADD_L1                  ds 1
 ADD_L2                  ds 1
 
 ;***********************************************
-; 	     INICIALIZACIÓN DE LCD
+; 	     LCD INITIALIZATION
 ;***********************************************
 iniDsp:                 db $04
 FUNCTION_SET1:          db $28
@@ -75,7 +75,7 @@ T_WRITE_RTC:    db $00,$00,$08,$03,$04,$12,$19
 T_READ_RTC:     ds 6
 
 ;***********************************************
-; 	     INICIO DE MENSAJES
+; 	     MESSAGES START
 ;***********************************************
         org $1050
 EOM:    EQU $04
@@ -85,63 +85,63 @@ MSG1:   FCC " DESPERTADOR 623"
         db EOM
 
 ;***********************************************
-; 	     CONFIGURACION DE HARDWARE
+; 	     HARDWARE CONFIGURATION
 ;***********************************************
 
 		org $2000
 
-	lds #$3BFF               ; Carga puntero de pila.
+	lds #$3BFF               ; Load stack pointer.
 
-        ;; Configuración de LEDS
-	movb #$FF,DDRB           ; Puerto B: escritura.
-        bset DDRJ,#$03           ; PJ1 escritura.
-	bclr PTJ,#$02            ; PJ1 como GND.
-        movb #$FF,DDRP           ; PORTJ: Entrada.
+        ;; LEDS configuration
+	movb #$FF,DDRB           ; Port B: write.
+        bset DDRJ,#$03           ; PJ1 write.
+	bclr PTJ,#$02            ; PJ1 as GND.
+        movb #$FF,DDRP           ; PORTJ: Input.
 
-        ;; Configuración de PK para LCD
+        ;; PK configuration for LCD
         movb #$FF,DDRK
 
-        ;; Confguración I2C
-        movb #$1F,IBFD          ; Configura SCL a 1kHz y
+        ;; I2C configuration
+        movb #$1F,IBFD          ; Set SCL to 1kHz and
                                 ; SDA_Hold=1.375us.
 
-        ;; Habilita respectivamente:  ; I_Bus, I_Bus Interrupt,
-        ;; Modo Master y Transmisión
+        ;; Enable respectively:  ; I_Bus, I_Bus Interrupt,
+        ;; Master mode and Transmission
         movb #$F0,IBCR          ; I_BEN=1, IBIE=1, MS/SL=1, Tx/Rx=1.
 
-        ;; Configuación de RTI_ISR
-        movb #$75,RTICTL       ; Define interrupciones de 50ms.
-        bset CRGINT,#$80       ; Para habilitar interrupción RTI.
+        ;; RTI_ISR configuration
+        movb #$75,RTICTL       ; Set 50ms interrupts.
+        bset CRGINT,#$80       ; To enable RTI interrupt.
 
-        ;; Configuración de PTH_ISR
-        movb #$09,PIEH          ; Habilita interrupción de PH(3,0).
-        bclr PPSH,#$0F          ; Selección de interrupción por
+        ;; PTH_ISR configuration
+        movb #$09,PIEH          ; Enable PH(3,0) interrupt.
+        bclr PPSH,#$0F          ; Select interrupt on
                                 ; flanco decreciente.
 
-        ;; Configuración de OC4_ISR y OC5_ISR
-        movb #$90,TSCR1         ; Habilita TCNT y funcion de TFFCA.
-        movb #$03,TSCR2         ; Prescalador de 8.
-        movb #$10,TIOS          ; Habilita el IOS4.
-        movb #$05,TCTL1         ; Canal 4 y 5 como Toggle.
-        movb #$10,TIE           ; Habilita TC4.
+        ;; OC4_ISR and OC5_ISR configuration
+        movb #$90,TSCR1         ; Enable TCNT and TFFCA function.
+        movb #$03,TSCR2         ; Prescaler of 8.
+        movb #$10,TIOS          ; Enable IOS4.
+        movb #$05,TCTL1         ; Channels 4 and 5 as Toggle.
+        movb #$10,TIE           ; Enable TC4.
 
 
 
 
 ;***********************************************
-; 	     INICIALIZACIÓN_DE_VARIABLES
+; 	     VARIABLE_INITIALIZATION
 ;***********************************************
 
 ;***************** RTI  ***************************
-        movb  #20,CONT_RTI       ; Para contar 1s.
+        movb  #20,CONT_RTI       ; To count 1s.
 
 ;***************** PANTALLAS ***************************
-        ;; Se inicializan las variables de las pantallas
+        ;; The display variables are initialized
         ;; X:X:X:X:X:PTH1_PRS:RD_FLG:RW_RTC
         movb #$00,BANDERAS
-        movb #$0A,BRILLO        ; Para 7SEG encendida en inicio.
+        movb #$0A,BRILLO        ; For 7SEG on at startup.
         movb #$00,CONT_DIG
-        movb #100,CONT_TICKS    ; Para contar 1s.
+        movb #100,CONT_TICKS    ; To count 1s.
         movb #$00,DT
         movb #$00,BCD1
         movb #$00,BCD2
@@ -152,15 +152,15 @@ MSG1:   FCC " DESPERTADOR 623"
         movb #$00,LEDS
         movw #$0000,CONT_7SEG
         movb #$00,Cont_Delay
-        movb #$64,D2mS          ; Para contar 2ms.
-        movb #$0D,D260uS        ; Para contar 260uS.
-        movb #$02,D40uS         ; Para contar 40us.
+        movb #$64,D2mS          ; To count 2ms.
+        movb #$0D,D260uS        ; To count 260uS.
+        movb #$02,D40uS         ; To count 40us.
         movb #$00,Clear_LCD
-        movb #$80,ADD_L1        ; Para direcciona a L1 de LCD.
-        movb #$C0,ADD_L2        ; Para direcciona a L2 de LCD.
+        movb #$80,ADD_L1        ; To address L1 of LCD.
+        movb #$C0,ADD_L2        ; To address L2 of LCD.
 
 ;***************** I2C ***************************
-        ;; Se inicializan la variable y arreglo del I2C.
+        ;; The I2C variable and array are initialized.
         movb #$00,INDEX_RTC
         ldx #T_READ_RTC-1
         ldaa #7
@@ -169,9 +169,9 @@ INICIALIZAR_T_READ_RTC:
         dbne A,INICIALIZAR_T_READ_RTC
 
 ;************ INTERRUPCIONES ********************
-        cli		        ; Carga 0 en I en CCR
+        cli		        ; Load 0 into I in CCR
 
-        ;; Para generar ticks de 50 KHz.
+        ;; To generate 50 KHz ticks.
         ldd TCNT
         addd #60
         std TC4
@@ -179,43 +179,43 @@ INICIALIZAR_T_READ_RTC:
 ;***********************************************
 ; 	     PRINCIPAL
 ;***********************************************
-        ;; Se carga mensaje en LCD:
+        ;; Load message into LCD:
         ;;      RELOJ
         ;;  DESPERTADOR 623
-        jsr INICIALIZAR_LCD     ; Se limpia la LCD.
-        ldx #MSG0               ; Carga MSG0 en línea.
-        ldy #MSG1               ; Carga MSG1 en línea.
-        jsr CARGAR_LCD          ; Se carga mensaje en LCD.
+        jsr INICIALIZAR_LCD     ; Clear the LCD.
+        ldx #MSG0               ; Load MSG0 into line.
+        ldy #MSG1               ; Load MSG1 into line.
+        jsr CARGAR_LCD          ; Load message into LCD.
 
 RETORNAR:
 
-        ;; Si la alarma está encencidad, la misma debe permanecer
-        ;; encendida hasta que la PTH1 la deshabilite.
+        ;; If the alarm is on, it must stay
+        ;; on until PTH1 disables it.
         brset TIE,#$20,RETORNAR
 
-        ;; Si la alarma no está encendida, se consulta si ya la hora
-        ;; y minutos del RTC coinciden con los programados en la
-        ;; alarma.
-        ldx #T_READ_RTC         ; Lee el contenido del arreglo de
-        ldd 1,X                 ; lectura de RTC.
-        cpd ALARMA              ; Si coincide con la hora y minutos
-        beq ACTIVAR_ALARMA      ; preestablecida, se activa la alarma.
+        ;; If the alarm is not on, check whether the RTC hour
+        ;; and minutes already match those set in the
+        ;; alarm.
+        ldx #T_READ_RTC         ; Read the contents of the RTC
+        ldd 1,X                 ; read array.
+        cpd ALARMA              ; If it matches the preset hour
+        beq ACTIVAR_ALARMA      ; and minutes, the alarm is activated.
 
 
-        bclr BANDERAS,$04       ; Se desactiva la bandera de PTH1_PRS.
+        bclr BANDERAS,$04       ; Clear the PTH1_PRS flag.
 
         bra RETORNAR
 
 ACTIVAR_ALARMA:
-        ;; Si la alarma fue reciéntemente apagada por interrupción
-        ;; PH1, no se enciende.
+        ;; If the alarm was recently turned off by the PH1
+        ;; interrupt, it is not turned on.
         brset BANDERAS,$04,RETORNAR
 
-        bset TIOS,$20           ; Habilita el IOS5.
+        bset TIOS,$20           ; Enable IOS5.
 
-        bset TIE,$20            ; Habilita TC5 (Alarma).
+        bset TIE,$20            ; Enable TC5 (Alarm).
 
-        ;; Para generar frecuenca de 440 KHz.
+        ;; To generate a 440 KHz frequency.
         ldd TCNT
         addd #13636
         std TC5
@@ -228,284 +228,284 @@ ACTIVAR_ALARMA:
 ; 	             PTH_ISR
 ;***********************************************
 PTH_ISR:
-        ;; Si se presionó PTH2, se reduce el brillo.
+        ;; If PTH2 was pressed, the brightness is reduced.
         brset PIFH,#$04,REDUCIR_BRILLO
 
-        ;; Si se presionó PTH3, se incrementa el brillo.
+        ;; If PTH3 was pressed, the brightness is increased.
         brset PIFH,#$08,AUMENTAR_BRILLO
 
-        ;; Si se presionó PTH1, se deshabilita la interrupción OC5,
-        ;; la cual implementa el buzzer de la alarma.
+        ;; If PTH1 was pressed, the OC5 interrupt is disabled,
+        ;; which implements the alarm buzzer.
         brset PIFH,#$02,DESHABILITAR_ALARMA
 
-        ;; Si no se presionó ninguno de los anteriores, por descarte,
-        ;; se presionó PH0. Por tanto se procede a escribir el byte de
-        ;; START y CALLING ADDRESS, para dar por iniciado la escritura
-        ;; a los registros de RTC del DS1307.
+        ;; If none of the above was pressed, by elimination,
+        ;; PH0 was pressed. So the START byte and CALLING
+        ;; ADDRESS are written to begin the write
+        ;; to the DS1307 RTC registers.
 CALL_W:
-        bclr BANDERAS,$02       ;Deshabilita la lectura a cada segundo
-                                ;del RTC.
+        bclr BANDERAS,$02       ;Disable the per-second read
+                                ;of the RTC.
 
         bset BANDERAS,$01       ; W_FLAG=1.
 
-        bset IBCR,#$30          ; Se activa señal de START.
+        bset IBCR,#$30          ; Assert START signal.
 
-        movb DIR_WR,IBDR        ; Se escribe WRITE CALL ADDR en bus.
+        movb DIR_WR,IBDR        ; Write WRITE CALL ADDR on the bus.
 
-        bra SALIR_PTH           ; Se retorna al final de subrutina.
+        bra SALIR_PTH           ; Return to the end of the subroutine.
 
-        ;; Esta subrutina reduce el brillo.
+        ;; This subroutine reduces the brightness.
 REDUCIR_BRILLO:
         ldaa BRILLO
-        suba #$05               ; El brillo se reduce de 5 en 5.
+        suba #$05               ; Brightness decreases by 5.
 
-        tsta                    ; Si BRILLO llega a mínimo,
-        blt SALIR_PTH           ; se finaliza subrutina.
+        tsta                    ; If BRILLO reaches minimum,
+        blt SALIR_PTH           ; the subroutine ends.
 
-        sta BRILLO              ; Si no, se guarda el valor aumentado
-                                ; en variable BRILLO.
+        sta BRILLO              ; Otherwise, store the new value
+                                ; in BRILLO.
 
-        bra SALIR_PTH           ; Se retorna al final de subrutina.
+        bra SALIR_PTH           ; Return to the end of the subroutine.
 
-        ;; Esta subrutina aumenta el brillo.
+        ;; This subroutine increases the brightness.
 AUMENTAR_BRILLO:
         ldaa BRILLO
-        adda #$05               ; El brillo se aumenta de 5 en 5.
+        adda #$05               ; Brightness increases by 5.
 
-        cmpa #$64               ; Si BRILLO llega a máximo,
-        bgt SALIR_PTH           ; finaliza subrutina.
+        cmpa #$64               ; If BRILLO reaches maximum,
+        bgt SALIR_PTH           ; the subroutine ends.
 
-        sta BRILLO              ; Si no, se guarda el valor aumentado
-                                ; en variable BRILLO.
+        sta BRILLO              ; Otherwise, store the new value
+                                ; in BRILLO.
 
-        bra SALIR_PTH           ; Se retorna al final de subrutina.
+        bra SALIR_PTH           ; Return to the end of the subroutine.
 
-        ;; Esta subrutina deshabilita la alarma.
+        ;; This subroutine disables the alarm.
 DESHABILITAR_ALARMA:
-        bset BANDERAS,$04       ; Se activa la bandera de PTH1_PRS.
+        bset BANDERAS,$04       ; Set the PTH1_PRS flag.
 
-        bclr TIOS,#$20          ; Desabilita el IOS5.
+        bclr TIOS,#$20          ; Disable IOS5.
 
-        bclr TIE,#$20           ; Deshabilita TC5
+        bclr TIE,#$20           ; Disable TC5
 
-        ;; Finalización de subrutina.
+        ;; End of subroutine.
 SALIR_PTH:
-        bset PIFH, $0F          ; Limpia la interrupción.
+        bset PIFH, $0F          ; Clear the interrupt.
         rti
 
 ;***********************************************
 ;                   RTI_ISR
 ;***********************************************
 RTI_ISR:
-        dec CONT_RTI            ; Se decrementa CONT_RTI.
+        dec CONT_RTI            ; Decrement CONT_RTI.
 
-        tst CONT_RTI            ; Si no se ha llegado a 1s,
-        bne FIN_RTI             ; se finaliza la subrutina.
+        tst CONT_RTI            ; If 1s has not been reached,
+        bne FIN_RTI             ; the subroutine ends.
 
-        ;; Cuando se ha llegado a 1s, se procede a realizar la
-        ;; secuencia propia de la subrutina.
+        ;; When 1s is reached, the subroutine's own
+        ;; sequence is carried out.
 CONT_RTI_CERO:
-        movb #20,CONT_RTI       ; Se recarga contador de 1s.
+        movb #20,CONT_RTI       ; Reload the 1s counter.
 
-        ;; Si RD_FLG=1, es porque ya se escribió un valor en los
-        ;; registros del DS1307 y se debe proceder a realizar su
-        ;; lectura cada segundo. Para eso, se escribe el bit de START
-        ;; y se envía el CALLING ADDRESS de lectura.
+        ;; If RD_FLG=1, a value has already been written to the
+        ;; DS1307 registers and a read must be performed
+        ;; every second. For that, the START bit is written
+        ;; and the read CALLING ADDRESS is sent.
         brset BANDERAS,$02,CALL_R
 
-        ;; Si RD_FLG=0, no se ha escrito nada en el registro del
-        ;; DS1307 y por tanto, el mismo no se debe leer.
+        ;; If RD_FLG=0, nothing has been written to the DS1307
+        ;; register, so it must not be read.
         bra FIN_RTI
 
 CALL_R:
-        brset IBSR,$20,*        ; Espera a que bus I2C se libere.
+        brset IBSR,$20,*        ; Wait for the I2C bus to be free.
 
         bclr BANDERAS,$01       ; W_FLAG=0.
 
-        bset IBCR,$30           ; Se activa señal de START.
+        bset IBCR,$30           ; Assert START signal.
 
-        movb DIR_WR,IBDR        ; Se escribe CALL ADDR en bus.
+        movb DIR_WR,IBDR        ; Write CALL ADDR on the bus.
 
 FIN_RTI:
-        bset CRGFLG,#$80        ; Se limpia bandera de interrupción.
+        bset CRGFLG,#$80        ; Clear interrupt flag.
         rti
 
 ;***********************************************
 ;                   I2C_ISR
 ;***********************************************
 I2C_ISR:
-        ;; Se consulta si se encuentra en el proceso de lectura o
-        ;; escritura (Bandera WR_FLG).
-        brset BANDERAS,$01,WRITE_RTC ; Si WR_FLG=1, ir a escritura.
+        ;; Check whether a read or write is in progress
+        ;; (WR_FLG flag).
+        brset BANDERAS,$01,WRITE_RTC ; If WR_FLG=1, go to write.
 
-        jsr READ_RTC                 ; Si no, ir a lectura.
+        jsr READ_RTC                 ; Otherwise, go to read.
 
 RETORNAR_I2C_ISR:
-        bset IBSR,$02           ;Se limpia la bandera de interrupción.
+        bset IBSR,$02           ;Clear the interrupt flag.
         rti
 
 ;***********************************************
 ;                  WRITE_RTC
 ;***********************************************
 WRITE_RTC:
-        ;; Se consulta si se está ante la primera interrupción
+        ;; Check whether this is the first interrupt
         tst INDEX_RTC
         bne W_BYTE
 
-        ;; Si se está ante la primera interrupción se transmite la
-        ;; dirección del registro puntero.
-        brset IBSR,$01,*        ; Verifica ACK recibido.
+        ;; If this is the first interrupt, the pointer-register
+        ;; address is transmitted.
+        brset IBSR,$01,*        ; Verify ACK received.
 
-        inc INDEX_RTC           ; Se incrementa el índice.
+        inc INDEX_RTC           ; Increment the index.
 
-        movb DIR_SEG,IBDR       ; Se escribe el register pointer.
+        movb DIR_SEG,IBDR       ; Write the register pointer.
 
 
-        bra RETORNAR_I2C_ISR    ; Se retorna a I2C_ISR.
+        bra RETORNAR_I2C_ISR    ; Return to I2C_ISR.
 
-        ;; Se escriben byte a byte los valores correspondientes de los
-        ;; registros del DS1307.
+        ;; The corresponding DS1307 register values are written
+        ;; byte by byte.
 W_BYTE:
 
-        ldaa INDEX_RTC          ; Se carga en R1 el contenido de
-                                ; índice de interrupción.
+        ldaa INDEX_RTC          ; Load into R1 the contents of
+                                ; the interrupt index.
 
-        ;; Se consulta si ya se transmitió el último byte.
+        ;; Check whether the last byte was already transmitted.
         cmpa #8
         beq INDEX_RTC_W_I9
 
-        ldx #T_WRITE_RTC        ; Se accede T_WRITE_RTC por
-        tfr A,B                 ; direccionamiento indexado por
-        subb #1                 ; acumulador R2. Y R2 se referencia
-                                ; al índice de interrupción.
+        ldx #T_WRITE_RTC        ; T_WRITE_RTC is accessed by
+        tfr A,B                 ; accumulator-offset indexed
+        subb #1                 ; addressing with R2. R2 references
+                                ; the interrupt index.
 
-        brset IBSR,$01,*        ; Verifica ACK recibido.
+        brset IBSR,$01,*        ; Verify ACK received.
 
-        movb B,X,IBDR           ; Se escribe el byte respectivo para
-                                ; configurar el RTC.
+        movb B,X,IBDR           ; Write the respective byte to
+                                ; configure the RTC.
 
-        ;; Si no se llegó a la última interrupción, se incrementa el
-        ;; índice de interrupción y se retorna a la subrutina I2C_ISR.
+        ;; If the last interrupt was not reached, the interrupt
+        ;; index is incremented and control returns to I2C_ISR.
         inc INDEX_RTC
         bra RETORNAR_I2C_ISR
 
-        ;; Si ya se transmitió el último byte, se manda la señal STOP.
+        ;; If the last byte was already transmitted, send the STOP signal.
 INDEX_RTC_W_I9:
-        brset IBSR,$01,*        ; Verifica ACK recibido.
+        brset IBSR,$01,*        ; Verify ACK received.
 
-        bset BANDERAS,$02       ; Habilita la lectura a cada segundo
-                                ; del RTC.
+        bset BANDERAS,$02       ; Enable the per-second read
+                                ; of the RTC.
 
-        movb #$00,INDEX_RTC     ; Restablece el índice de interrupción.
+        movb #$00,INDEX_RTC     ; Reset the interrupt index.
 
-        bclr IBCR,#$20          ; Manda señal de STOP.
+        bclr IBCR,#$20          ; Send STOP signal.
 
-        bra RETORNAR_I2C_ISR    ; Se retorna a I2C_ISR.
+        bra RETORNAR_I2C_ISR    ; Return to I2C_ISR.
 
 ;***********************************************
 ;                  READ_RTC
 ;***********************************************
 READ_RTC:
-        ldaa INDEX_RTC          ; Se carga en R1 el contenido de
-                                ; índice de interrupción.
+        ldaa INDEX_RTC          ; Load into R1 the contents of
+                                ; the interrupt index.
 
-        ldx #T_READ_RTC         ; Se accede T_READ_RTC por
-        tfr A,B                 ; direccionamiento indexado por
-        subb #3                 ; acumulador R2. Y R2 se referencia
-                                ; al índice de interrupción.
-        ;; Se consulta si es la primera interrupción.
+        ldx #T_READ_RTC         ; T_READ_RTC is accessed by
+        tfr A,B                 ; accumulator-offset indexed
+        subb #3                 ; accumulator-offset indexed
+                                ; the interrupt index.
+        ;; Check whether it is the first interrupt.
         tsta
         beq INDEX_RTC_R_I1
 
-        ;; Se consulta si es la segunda interrupción.
+        ;; Check whether it is the second interrupt.
         cmpa #01
         beq INDEX_RTC_R_I2
 
-        ;; Se consulta si es la tercera interrupción.
+        ;; Check whether it is the third interrupt.
         cmpa #02
         beq INDEX_RTC_R_I3
 
-        ;; Se consulta si es la última interrupción.
+        ;; Check whether it is the last interrupt.
         cmpa #10
         beq INDEX_RTC_R_I11
 
-        ;; Se consulta si es la penúltima interrupción.
+        ;; Check whether it is the second-to-last interrupt.
         cmpa #09
         beq INDEX_RTC_R_I9
 
 LEER_IBDR:
 
-        movb IBDR,B,X           ; Lee el registro del RTC y lo guarda
-                                ; en la tabla en memoria del S12.
+        movb IBDR,B,X           ; Read the RTC register and store it
+                                ; in the table in S12 memory.
 
 FINALIZANDO_READ_RTC:
-        inc INDEX_RTC           ; Incrementa el índice de interrupción.
+        inc INDEX_RTC           ; Increment the interrupt index.
 
 FIN_READ_RTC:
-        rts                     ; Fin de subrutina.
+        rts                     ; End of subroutine.
 
-        ;; Secuencia para primera interrupción.
+        ;; Sequence for the first interrupt.
 INDEX_RTC_R_I1:
-        ;; Si se está ante la primera interrupción se transmite la
-        ;; dirección del registro puntero.
-        brset IBSR,$01,*        ; Espera un ACK.
+        ;; If this is the first interrupt, the pointer-register
+        ;; address is transmitted.
+        brset IBSR,$01,*        ; Wait for an ACK.
 
-        movb DIR_SEG,IBDR       ; Se escribe el register pointer.
+        movb DIR_SEG,IBDR       ; Write the register pointer.
 
-        bra FINALIZANDO_READ_RTC ; Se incrementa índice y retorna.
+        bra FINALIZANDO_READ_RTC ; Increment index and return.
 
-        ;; Secuencia para segunda interrupción.
+        ;; Sequence for the second interrupt.
 INDEX_RTC_R_I2:
-        brset IBSR,$01,*        ; Espera un ACK.
+        brset IBSR,$01,*        ; Wait for an ACK.
 
-        bset IBCR,$04           ; Se envía señal de REPEAT START.
+        bset IBCR,$04           ; Send REPEAT START signal.
 
-        movb DIR_RD,IBDR        ; Se escribe READ CALL ADDR en bus.
+        movb DIR_RD,IBDR        ; Write READ CALL ADDR on the bus.
 
-        bra FINALIZANDO_READ_RTC ; Se incrementa índice y retorna.
+        bra FINALIZANDO_READ_RTC ; Increment index and return.
 
-        ;; Secuencia para tercera interrupción.
+        ;; Sequence for the third interrupt.
 INDEX_RTC_R_I3:
-        brset IBSR,$01,*        ; Espera un ACK.
+        brset IBSR,$01,*        ; Wait for an ACK.
 
-        bclr IBCR,$18           ; Se habilita TXACK y se pone Master
-                                ; como RX.
+        bclr IBCR,$18           ; Enable TXACK and set Master
+                                ; as RX.
 
-        ldaa IBDR                ; Lectura dummy.
+        ldaa IBDR                ; Dummy read.
 
-        bra FINALIZANDO_READ_RTC ; Se incrementa índice y retorna.
+        bra FINALIZANDO_READ_RTC ; Increment index and return.
 
-        ;; Secuencia para última interrupción.
+        ;; Sequence for the last interrupt.
 INDEX_RTC_R_I11:
-        ;; bset IBCR,#$10          ; Se pone Master como TX.
+        ;; bset IBCR,#$10          ; Set Master as TX.
 
-        movb #$00,INDEX_RTC     ; Restablece el índice de interrupción.
+        movb #$00,INDEX_RTC     ; Reset the interrupt index.
 
-        bclr IBCR,#$38          ; Manda señal de STOP.
+        bclr IBCR,#$38          ; Send STOP signal.
 
-        movb 1,X,BCD2           ; Lee el contenido del arreglo de
-        movb 2,X,BCD1           ; lectura de RTC y lo pone en pantalla
-                                ; 7SEG.
+        movb 1,X,BCD2           ; Read the contents of the RTC read
+        movb 2,X,BCD1           ; array and put it on the 7SEG
+                                ; display.
 
-        ;; bclr IBCR,#$08           ; Se pone NACK en trama.
+        ;; bclr IBCR,#$08           ; Put NACK in the frame.
 
         bra FIN_READ_RTC
 
-        ;; Secuencia para penúltima interrupción.
+        ;; Sequence for the second-to-last interrupt.
 INDEX_RTC_R_I9:
-        bset IBCR,#$08           ; Se pone NACK en trama.
+        bset IBCR,#$08           ; Put NACK in the frame.
 
-        movb IBDR,B,X           ; Lee el registro del RTC y lo guarda
-                                ; en la tabla en memoria del S12.
+        movb IBDR,B,X           ; Read the RTC register and store it
+                                ; in the table in S12 memory.
 
-        bra FINALIZANDO_READ_RTC ; Se incrementa índice y retorna.
+        bra FINALIZANDO_READ_RTC ; Increment index and return.
 
 
 ;***********************************************
 ;                  OC5_ISR
 ;***********************************************
 OC5_ISR:
-        ;; Para generar frecuencia audible de 440 KHz.
+        ;; To generate an audible 440 KHz frequency.
         ldd TCNT
         addd #13636
         std TC5
@@ -517,100 +517,100 @@ OC5_ISR:
 ;          OC4_ISR
 ;***********************************************
 OC4_ISR:
-        ;; Cuenta para refrescar valor de dígitos.
-        ldd CONT_7SEG           ; Se incrementa el contador de 7SEG
-        addd #$01               ; para llevar la cuenta de los 100ms
-        std CONT_7SEG           ; en que se debe llamar a BCD_7SEG.
+        ;; Counter to refresh the digit value.
+        ldd CONT_7SEG           ; Increment the 7SEG counter
+        addd #$01               ; to keep track of the 100ms
+        std CONT_7SEG           ; at which BCD_7SEG must be called.
 
-        ;; Cuenta para control por ciclo de trabajo.
-        dec CONT_TICKS          ; Se descuenta el contador de ticks
-        tst CONT_TICKS          ; que funciona como el N en el manejo
-        ble CERO                ; de multiplexación de pantallas.
+        ;; Counter for duty-cycle control.
+        dec CONT_TICKS          ; Count down the tick counter,
+        tst CONT_TICKS          ; which acts as N in the display
+        ble CERO                ; multiplexing handling.
 
-        ;; Determina el ancho de pulso de habilitación de LEDs.
-        ldaa CONT_TICKS         ; Tomando a N=100  y a K=BRILLO,
-        ldab #100               ; se determina el valor de DT al
-        subb BRILLO             ; hacer DT = N-K.
+        ;; Determine the enable pulse width for the LEDs.
+        ldaa CONT_TICKS         ; Taking N=100 and K=BRILLO,
+        ldab #100               ; DT is determined by
+        subb BRILLO             ; computing DT = N-K.
         stb DT
-        cmpa DT                 ; Si DT >= CONT_TICKS, se habilitan
-        ble HAB_LED             ; los 7SEG y deshabilita los LEDs.
+        cmpa DT                 ; If DT >= CONT_TICKS, enable
+        ble HAB_LED             ; the 7SEG and disable the LEDs.
 
-        ;; Se consulta si el valor de CONT_7SEG ya llegó a su máxumo.
+        ;; Check whether CONT_7SEG has reached its maximum.
         ldd CONT_7SEG
         cpd #5000
-        lblt FIN_OC2_ISR        ; Si alcanzó el máximo,
-        movw #$0000,CONT_7SEG   ; se recarga CONT_7SEG en cero,
-        jsr BCD_7SEG            ; Y se convierte variables BCD a 7SEG.
+        lblt FIN_OC2_ISR        ; If it reached the maximum,
+        movw #$0000,CONT_7SEG   ; reload CONT_7SEG to zero,
+        jsr BCD_7SEG            ; and convert BCD variables to 7SEG.
         bra FIN_OC2_ISR
 
-        ;; Manejo de habilitación de LEDS.
+        ;; LEDS enable handling.
 HAB_LED:
-        movb #$FF,PTP           ; Carga $FF, pues no habilita
-                                ; ningún valor especial en 7SEG.
+        movb #$FF,PTP           ; Load $FF, since it enables
+                                ; no special value on the 7SEG.
 
-        bclr PTJ,#$02           ; Se deshabilitan los LEDs.
+        bclr PTJ,#$02           ; Disable the LEDs.
 
-        movb LEDS,PORTB         ; Se carga el valor de LEDS a PORTB.
+        movb LEDS,PORTB         ; Load the LEDS value to PORTB.
         bra FIN_OC2_ISR
 
-        ;; Manejo de habilitación de DIGITOS.
+        ;; DIGIT enable handling.
 CERO:
-        movb #100,CONT_TICKS    ; Cuándo CONT_TICKS ha llegado a cero
-                                ; se recarga CONT_TICKS en 100.
+        movb #100,CONT_TICKS    ; When CONT_TICKS has reached zero,
+                                ; reload CONT_TICKS to 100.
 
-        inc CONT_DIG            ; Además, aquí se incrementa CONT_DIG
-        bset PTJ,#$02           ; y se habilitan los LEDs.
+        inc CONT_DIG            ; Also, CONT_DIG is incremented here
+        bset PTJ,#$02           ; and the LEDs are enabled.
 
-        ;; Se consulta cuál es el dígito a escribir, de acuerdo con
-        ;; el contenido de CONT_DIG.
+        ;; Check which digit to write, according to
+        ;; the contents of CONT_DIG.
         brset CONT_DIG,#$03,HAB_DIG4
         brset CONT_DIG,#$02,HAB_DIG3
         brset CONT_DIG,#$01,HAB_DIG2
 
-        ;; Habilita dígito 1
+        ;; Enable digit 1
 HAB_DIG1:
-        ;; La habilitación de DIG1 es especial, si habilita en dos
-        ;; casos, cuando se tiene un valor de 00 en CONT_DIG y cuando la cuenta excedió el valor
+        ;; DIG1 enabling is special, it enables in two
+        ;; cases, when CONT_DIG is 00 and when the count exceeded the value
 
-        tst CONT_DIG            ; La habilitación de DIG1 es especial,
-        beq LOAD_DIG1           ; pues se habilita cuando la cuenta
-        movb #$00,CONT_DIG      ; es cero o cuando se rebasó. En el
-                                ; último caso se debe habilitar el
-                                ; dígito y reestablecer el contador.
+        tst CONT_DIG            ; DIG1 enabling is special,
+        beq LOAD_DIG1           ; since it enables when the count
+        movb #$00,CONT_DIG      ; is zero or when it overflowed. In the
+                                ; latter case the digit must be enabled
+                                ; and the counter reset.
 
 LOAD_DIG1:
-        movb #$07,PTP           ; Se habilita el DIG1 en el PP
-        movb DIG1,PORTB         ; y se carga su valor en PORTB.
+        movb #$07,PTP           ; Enable DIG1 on PP
+        movb DIG1,PORTB         ; and load its value to PORTB.
         bra FIN_OC2_ISR
 
-        ;; Habilita dígito 2
+        ;; Enable digit 2
 HAB_DIG2:
-        movb #$0B,PTP           ; Habilita DIG2.
+        movb #$0B,PTP           ; Enable DIG2.
 LOAD_DIG2:
-        movb DIG2,PORTB         ; Carga dígito en PORTB.
+        movb DIG2,PORTB         ; Load digit to PORTB.
         bra FIN_OC2_ISR
 
-        ;; Habilita dígito 3
+        ;; Enable digit 3
 HAB_DIG3:
-        movb #$0D,PTP           ; Habilita DIG3
+        movb #$0D,PTP           ; Enable DIG3
 LOAD_DIG3:
-        movb DIG3,PORTB         ; Carga dígito en PORTB.
+        movb DIG3,PORTB         ; Load digit to PORTB.
         bra FIN_OC2_ISR
 
-        ;; Habilita dígito 4
+        ;; Enable digit 4
 HAB_DIG4:
-        movb #$0E,PTP           ; Habilita el DIG4
+        movb #$0E,PTP           ; Enable DIG4
 LOAD_DIG4:
-        movb DIG4,PORTB         ; Carga dígito en PORTB.
+        movb DIG4,PORTB         ; Load digit to PORTB.
         bra FIN_OC2_ISR
 
 FIN_OC2_ISR:
-        ;; Manejor de Cont_Delay para LCD
+        ;; Cont_Delay handling for LCD
         tst CONT_DELAY
-        beq CARGAR_TC4          ; Si CONT_DELAY != 0,
-        dec CONT_DELAY          ; se decrementa su valor.
+        beq CARGAR_TC4          ; If CONT_DELAY != 0,
+        dec CONT_DELAY          ; decrement its value.
 CARGAR_TC4:
-        ;; Se lee TCNT y se recarga el próximo valor a comparar en
+        ;; Read TCNT and reload the next value to compare in
         ;; TC2.
         ldd TCNT
         addd #60
@@ -621,56 +621,56 @@ CARGAR_TC4:
 ;          BCD_7SEG
 ;***********************************************
 BCD_7SEG:
-        ;; Apila acumuladores e índices usados en subrutina,
-        ;; por si se usaba en otras subrutinas.
+        ;; Push accumulators and indices used in the subroutine,
+        ;; in case they were used in other subroutines.
         pshx
         psha
         pshb
 
-        ldx #SEGMENT            ; Se carga la dirección de SEGMENT en
-                                ; X para accederlo con
-                                ; direccioneamiento indexado con
-                                ; offset por acumulador.
+        ldx #SEGMENT            ; Load the SEGMENT address into
+                                ; X to access it with
+                                ; accumulator-offset indexed
+                                ; addressing.
 
-        ;; Prepara DIG3
+        ;; Prepare DIG3
         ldaa BCD1
-        anda #$0F               ; Se extrae el nibble menos
-        psha                    ; significativo de BCD1 y se apila.
+        anda #$0F               ; Extract the least significant
+        psha                    ; nibble of BCD1 and push it.
 
-        ;; Prepara DIG1
+        ;; Prepare DIG1
         ldaa BCD2
-        anda #$0F               ; Se extrae el nibble menos
-        psha                    ; significativo de BCD2 y se apila.
+        anda #$0F               ; Extract the least significant
+        psha                    ; nibble of BCD2 and push it.
 
-        ;; Prepara DIG4
-        ldaa BCD1               ; Se extrae el nibble más significativo
-        lsra                    ; de BCD1. Para ello se divide el
-        lsra                    ; dígito entre 16.
+        ;; Prepare DIG4
+        ldaa BCD1               ; Extract the most significant nibble
+        lsra                    ; of BCD1. To do so, the digit is
+        lsra                    ; divided by 16.
         lsra
         lsra
-        psha                    ; Una vez dividido, se apila.
+        psha                    ; Once divided, it is pushed.
 
-        ;; Prepara DIG2
-        ldaa BCD2               ; Se extrae el nibble más significativo
-        lsra                    ; de BCD2. Para ello se divide el
-        lsra                    ; dígito entre 16.
+        ;; Prepare DIG2
+        ldaa BCD2               ; Extract the most significant nibble
+        lsra                    ; of BCD2. To do so, the digit is
+        lsra                    ; divided by 16.
         lsra
         lsra
-        psha                    ; Una vez dividido, se apila.
+        psha                    ; Once divided, it is pushed.
 
-        ;; Carga los valores de los dígitos
+        ;; Load the digit values
         pula
-        movb A,X,DIG2           ; Se carga DIG2.
+        movb A,X,DIG2           ; Load DIG2.
         pula
-        movb A,X,DIG4           ; Se carga DIG4.
+        movb A,X,DIG4           ; Load DIG4.
         pula
-        movb A,X,DIG1           ; Se carga DIG1.
+        movb A,X,DIG1           ; Load DIG1.
         pula
-        movb A,X,DIG3           ; Se carga DIG3.
+        movb A,X,DIG3           ; Load DIG3.
 
-        ldaa T_READ_RTC         ; Se extrae el nibble más significativo
-        lsla                    ; de BCD2. Para ello se divide el
-        lsla                    ; dígito entre 16.
+        ldaa T_READ_RTC         ; Extract the most significant nibble
+        lsla                    ; of BCD2. To do so, the digit is
+        lsla                    ; divided by 16.
         lsla
         lsla
         lsla
@@ -686,7 +686,7 @@ BCD_7SEG:
 
 
 
-        ;; Se retornan acumuladores e índices.
+        ;; Restore accumulators and indices.
         pulb
         pula
         pulx
@@ -697,32 +697,32 @@ BCD_7SEG:
 ;***********************************************
 INICIALIZAR_LCD:
 
-        ;; Apila acumuladores e índices usados en subrutina,
-        ;; por si se usaba en otras subrutinas.
+        ;; Push accumulators and indices used in the subroutine,
+        ;; in case they were used in other subroutines.
         pshx
         pshy
         psha
         pshb
 
-        ldx #iniDsp             ; Para acceder iniDsp por
-                                ; direccionamiento indexado con offset
-                                ; constante.
+        ldx #iniDsp             ; To access iniDsp by
+                                ; constant-offset indexed
+                                ; addressing.
 
 SEGUIR_IniDSP:
         ldaa 0,X
-        jsr SEND_COMMAND        ; Envía comando De iniDsp.
+        jsr SEND_COMMAND        ; Send iniDsp command.
         movb D40uS,Cont_Delay
-        jsr Delay               ; Espera 40us.
+        jsr Delay               ; Wait 40us.
         inx
-        cpx #iniDsp+4           ; Si no se ha enviado todo iniDsp,
-        bne SEGUIR_IniDSP       ; síga enviando.
+        cpx #iniDsp+4           ; If not all of iniDsp has been sent,
+        bne SEGUIR_IniDSP       ; keep sending.
 
         ldaa #$01
-        jsr SEND_COMMAND        ;Envía comando de Clear Display.
+        jsr SEND_COMMAND        ;Send Clear Display command.
         movb D2mS,Cont_Delay
-        jsr Delay               ;Espera 2ms.
+        jsr Delay               ;Wait 2ms.
 
-        ;; Se retornan acumuladores e índices.
+        ;; Restore accumulators and indices.
         pulb
         pula
         puly
@@ -735,51 +735,51 @@ SEGUIR_IniDSP:
 ;***********************************************
 CARGAR_LCD:
 
-        ;; Apila acumuladores e índices usados en subrutina,
-        ;; por si se usaba en otras subrutinas.
+        ;; Push accumulators and indices used in the subroutine,
+        ;; in case they were used in other subroutines.
         pshx
         pshy
         psha
         pshb
 
-        ldaa ADD_L1             ;Se envía el comando ADD_L1 para poner
-        jsr SEND_COMMAND        ;el cursor en línea 1.
+        ldaa ADD_L1             ;Send the ADD_L1 command to put
+        jsr SEND_COMMAND        ;the cursor on line 1.
         movb D40uS,Cont_Delay
-        jsr Delay               ; Esperar 40us
+        jsr Delay               ; Wait 40us
 LOAD_MSG1:
-        ;; Se espera el mensaje correspondiente a la la línea 1 por
-        ;; el índice X. Se carga el mensaje byte a byte. Cuando se
-        ;; recibe el caracter de fin de mensaje: EOM, se termina la
-        ;; comunicación.
+        ;; The message for line 1 is awaited via
+        ;; index X. The message is loaded byte by byte. When the
+        ;; end-of-message character EOM is received, the
+        ;; communication ends.
         ldaa 1,X+
-        cmpa #EOM               ; Si se recibe EOM, se inicial la
-        beq IS_EOM_MSG1         ; secuencia de configuración de L2.
+        cmpa #EOM               ; If EOM is received, start the
+        beq IS_EOM_MSG1         ; L2 configuration sequence.
 
-        jsr SEND_DATA           ; Si no, se envía char de MSGL1.
+        jsr SEND_DATA           ; Otherwise, send MSGL1 char.
         movb D40uS,Cont_Delay
-        jsr Delay               ;Se espera 40us
+        jsr Delay               ;Wait 40us
         bra LOAD_MSG1
 IS_EOM_MSG1:
-        ldaa ADD_L2             ; Se envía el comando ADD_L2 para poner
-        jsr SEND_COMMAND        ; el cursor en línea 2.
+        ldaa ADD_L2             ; Send the ADD_L2 command to put
+        jsr SEND_COMMAND        ; the cursor on line 2.
         movb D40uS,Cont_Delay
-        jsr Delay               ; Se espera 40us
+        jsr Delay               ; Wait 40us
 LOAD_MSG2:
-        ;; Se espera el mensaje correspondiente a la la línea 2 por
-        ;; el índice Y. Se carga el mensaje byte a byte. Cuando se
-        ;; recibe el caracter de fin de mensaje: EOM, se termina la
-        ;; comunicación.
+        ;; The message for line 2 is awaited via
+        ;; index Y. The message is loaded byte by byte. When the
+        ;; end-of-message character EOM is received, the
+        ;; communication ends.
         ldaa 1,Y+
-        cmpa #EOM               ; Si se recibe EOM, se finaliza la
-        beq IS_EOM_MSG2         ; subruitna.
+        cmpa #EOM               ; If EOM is received, end the
+        beq IS_EOM_MSG2         ; subroutine.
 
-        jsr SEND_DATA           ; Si no, se envía char de MSG2.
+        jsr SEND_DATA           ; Otherwise, send MSG2 char.
         movb D40uS,Cont_Delay
-        jsr Delay               ; Se espera 40us
+        jsr Delay               ; Wait 40us
         bra LOAD_MSG2
 
 IS_EOM_MSG2:
-        ;; Se retornan acumuladores e índices.
+        ;; Restore accumulators and indices.
         pulb
         pula
         puly
@@ -792,44 +792,44 @@ IS_EOM_MSG2:
 ;***********************************************
 SEND_COMMAND:
 
-        ;; Apila acumuladores e índices usados en subrutina,
-        ;; por si se usaba en otras subrutinas.
+        ;; Push accumulators and indices used in the subroutine,
+        ;; in case they were used in other subroutines.
         pshx
         pshy
         psha
         pshb
 
-        ;; Se carga el nibble más significativo en R1.
+        ;; Load the most significant nibble into R1.
         psha
         anda #$F0
         lsra
         lsra
 
-        ;; Se carga el nibble más significativo en PORTK.
+        ;; Load the most significant nibble into PORTK.
         sta PORTK
 
-        bclr PORTK,#$01         ; Se hace RS=0 (comando).
-        bset PORTK,#$02         ; Se hace EN=1.
+        bclr PORTK,#$01         ; Set RS=0 (command).
+        bset PORTK,#$02         ; Set EN=1.
         movb D260uS,Cont_Delay
-        jsr Delay               ; Se espera 260uS.
-        bclr PORTK,#$01         ; Se hace EN=0.
+        jsr Delay               ; Wait 260uS.
+        bclr PORTK,#$01         ; Set EN=0.
 
-        ;; Se carga el nibble menos significativo en R1.
+        ;; Load the least significant nibble into R1.
         pula
         anda #$0F
         lsla
         lsla
 
-        ;; Se carga el nibble menos significativo en PORTK.
+        ;; Load the least significant nibble into PORTK.
         sta PORTK
 
-        bclr PORTK,#$01         ; Se hace RS=0 (comando).
-        bset PORTK,#$02         ; Se hace EN=1.
+        bclr PORTK,#$01         ; Set RS=0 (command).
+        bset PORTK,#$02         ; Set EN=1.
         movb D260uS,Cont_Delay
-        jsr Delay               ; Se espera 260uS.
-        bclr PORTK,#$02         ; Se hace EN=0.
+        jsr Delay               ; Wait 260uS.
+        bclr PORTK,#$02         ; Set EN=0.
 
-        ;; Se retornan acumuladores e índices.
+        ;; Restore accumulators and indices.
         pulb
         pula
         puly
@@ -843,42 +843,42 @@ SEND_COMMAND:
 ;***********************************************
 SEND_DATA:
 
-        ;; Apila acumuladores e índices usados en subrutina,
-        ;; por si se usaba en otras subrutinas.
+        ;; Push accumulators and indices used in the subroutine,
+        ;; in case they were used in other subroutines.
         pshx
         pshy
         psha
         pshb
 
-        ;; Se carga el nibble más significativo en R1.
+        ;; Load the most significant nibble into R1.
         psha
         anda #$F0
         lsra
         lsra
 
-        ;; Se carga el nibble más significativo en PORTK.
+        ;; Load the most significant nibble into PORTK.
         sta PORTK
 
-        bset PORTK,#$03         ; Se hace RS=0 (comando) y EN=1.
+        bset PORTK,#$03         ; Set RS=0 (command) and EN=1.
         movb D260uS,Cont_Delay
-        jsr Delay               ; Se espera 260uS.
-        bclr PORTK,#$01         ; Se hace EN=0.
+        jsr Delay               ; Wait 260uS.
+        bclr PORTK,#$01         ; Set EN=0.
 
-        ;; Se carga el nibble menos significativo en R1.
+        ;; Load the least significant nibble into R1.
         pula
         anda #$0F
         lsla
         lsla
 
-        ;; Se carga el nibble menos significativo en PORTK.
+        ;; Load the least significant nibble into PORTK.
         sta PORTK               ;
-        bset PORTK,#$03         ; Se hace RS=0 (comando) y EN=1.
+        bset PORTK,#$03         ; Set RS=0 (command) and EN=1.
         movb D260uS,Cont_Delay
-        jsr Delay               ; Se espera 260uS.
-        bclr PORTK,#$02         ; Se hace EN=0.
+        jsr Delay               ; Wait 260uS.
+        bclr PORTK,#$02         ; Set EN=0.
 
 
-        ;; Se retornan acumuladores e índices.
+        ;; Restore accumulators and indices.
         pulb
         pula
         puly
@@ -891,8 +891,8 @@ SEND_DATA:
 ;          DELAY
 ;***********************************************
 DELAY:
-        ;; Se espera a que CONT_DELAY llegue a cero.
+        ;; Wait until CONT_DELAY reaches zero.
         tst CONT_DELAY
         bne DELAY
-        ;; Cuando llega a cero, retorna.
+        ;; When it reaches zero, return.
         rts

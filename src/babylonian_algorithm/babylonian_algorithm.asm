@@ -1,30 +1,30 @@
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-;             Definición de  Constantes y Variables
+;             Definition of Constants and Variables
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 org $1000
-LONG:           EQU $0a  ;Longitud de DATOS.
+LONG:           EQU $0a  ;Length of DATOS.
 
                 org $1001
-CANT:           ds 1  ;Cantidad de valores a buscar en DATOS que
-                      ;se encuentren en CUAD.
+CANT:           ds 1  ;Count of values to search for in DATOS that
+                      ;are present in CUAD.
 
                 org $1002
-CONT:           ds 1       ;Número de coincidencias entre DATOS y CUAD.
+CONT:           ds 1       ;Number of matches between DATOS and CUAD.
 
                 org $1020
-DATOS:          db  4, 9, 18, 4, 27, 63, 12, 32, 36, 15 ;Tabla con datos.
-;; DATOS:          db  4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 4  ;Tabla con datos.
+DATOS:          db  4, 9, 18, 4, 27, 63, 12, 32, 36, 15 ;Table of data.
+;; DATOS:          db  4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 4  ;Table of data.
 
                 org $1040
-               ;;Números con raiz entera en posibles valores de DATOS.
+               ;;Numbers with integer root among possible DATOS values.
 CUAD:           db 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144, 169, 196, 225
 
 
                 org $1100
-ENTERO:         ds  LONG       ;Raíz entera determinada a partir del algoritmo
-                               ;babilónico.
+ENTERO:         ds  LONG       ;Integer root determined by the
+                               ;Babylonian algorithm.
 
-        ;; Variables para cáculo de Babilónico.
+        ;; Variables for Babylonian calculation.
                 org $1300
 R:              ds 2
 T:              ds 2
@@ -32,15 +32,15 @@ V:              ds 2
 
 
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-;             Definición de etiquetas
+;             Label definitions
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-get_char:               EQU $EE84 ;Definimos las direcciones de las subrutinas
-put_char:               EQU $EE86 ;get_char y put_char.
-CR:                     EQU $0D  ;Caracter de control, retorna el cursor al
-                                 ;principio de la línea.
-BS:                     EQU $08  ;Caracter de espacio.
-LF:                     EQU $0A  ;Salto de línea, línea en blanco.
-FIN:                    EQU $00  ;Para indicar que termino la linea o caracter.
+get_char:               EQU $EE84 ;Define the addresses of the get_char
+put_char:               EQU $EE86 ;and put_char subroutines.
+CR:                     EQU $0D  ;Control character, returns the cursor to
+                                 ;the start of the line.
+BS:                     EQU $08  ;Backspace character.
+LF:                     EQU $0A  ;Line feed, blank line.
+FIN:                    EQU $00  ;To indicate end of line or character.
 
 MSG1:           db CR,LF
                 fcc "INGRESE EL VALOR DE CANT (ENTRE 1 Y 99): "
@@ -66,16 +66,16 @@ MSG6:           fcc " %d,"
 MSG7:           fcc " %d."
                 db FIN
 
-PRINTF:         EQU $EE88       ;Dirección de subrutina PRINTF.
+PRINTF:         EQU $EE88       ;Address of PRINTF subroutine.
 
 
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-;             Subrutina principal
+;             Main subroutine
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
          org $2000
-	lds #$3BFF              ; Carga puntero de pila.
+	lds #$3BFF              ; Load stack pointer.
 
-        ;; Inicializa todas las variables en cero.
+        ;; Initialize all variables to zero.
         movb #$00,CANT
         movb #$00,CONT
         movw #$0000,R
@@ -84,10 +84,10 @@ PRINTF:         EQU $EE88       ;Dirección de subrutina PRINTF.
         ;; ldab D,X
 
 PRINCIPAL:
-        jsr LEER_CANT   ;Se solicita el valor de CANT del usuario.
-        jsr BUSCAR      ;Se buscan CANT de datos en DATOS con
-                        ;raíz entera.
-        jsr Print_RESULT   ;Se imprimen los datos en ENTERO.
+        jsr LEER_CANT   ;Request the value of CANT from the user.
+        jsr BUSCAR      ;Search for CANT data items in DATOS with
+                        ;an integer root.
+        jsr Print_RESULT   ;Print the data in ENTERO.
 FINAL:
         bra *
 	end
@@ -97,28 +97,28 @@ FINAL:
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 LEER_CANT:
-        ;;Se solicita CANT del usuario.
+        ;;Request CANT from the user.
         ldx #$0000
         ldd #MSG1
         jsr [PRINTF,x]
 
 PRIMER_DIG:
-        ;;Se toma CANT del teclado.
+        ;;Read CANT from the keyboard.
         ldx #$00
         jsr [get_char,x]
-        ;; ldd #$31     ;Para depuración con simulador.
+        ;; ldd #$31     ;For debugging with the simulator.
 
-        ;; Se convierte el valor caputatado de ACII a entero.
+        ;; Convert the captured value from ASCII to integer.
         subd #$30
         tfr D,B
 
-        ;; Se verifica que el valor esté entre 0 y 9.
+        ;; Verify that the value is between 0 and 9.
         cmpb #9
         bhi LEER_CANT
         tstb
         blo LEER_CANT
 
-        ;; Se almacena el caracter en CANT y se imprime lo ingresado.
+        ;; Store the character in CANT and print what was entered.
         pshd
         ldaa #$10
         mul
@@ -126,32 +126,32 @@ PRIMER_DIG:
 
         ldx #$00
         ldd #MSG2
-        jsr [PRINTF,x]  ;Se imprime el primer dígito.
+        jsr [PRINTF,x]  ;Print the first digit.
         leas 2,SP
 
 SEGUNDO_DIG:
         ldx #$00
         jsr [get_char,x]
-        ;; ldd #$39     ;Para depuración con simulador.
+        ;; ldd #$39     ;For debugging with the simulator.
 
-        ;; Se convierte el valor caputatado de ACII a entero.
+        ;; Convert the captured value from ASCII to integer.
         subd #$30
         tfr D,B
 
-        ;; Se verifica que el valor esté entre 1 y 9.
+        ;; Verify that the value is between 1 and 9.
         cmpb #9
         bhi LEER_CANT
         cmpb #1
         blo LEER_CANT
 
-        ;; Se almacena el caracter en CANT y se imprime lo ingresado.
+        ;; Store the character in CANT and print what was entered.
         pshd
         ldaa CANT
         aba
         staa CANT
         ldx #$00
         ldd #MSG3
-        jsr [PRINTF,x]  ;Se imprime el primer dígito.
+        jsr [PRINTF,x]  ;Print the first digit.
         leas 2,SP
         rts
 
@@ -160,83 +160,83 @@ SEGUNDO_DIG:
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 BUSCAR:
 
-        ;;Se inicializan los índices con las posiciones de los arreglos y la
-        ;;tabla.
-        ldx #DATOS             ;Posición de DATOS en X.
-        ldy #ENTERO            ;Posición de ENTERO en Y.
-        pshy                   ;Se apila el valor de Y para hacer cambio de
-        ldy #CUAD              ;contexto e indexar con Y también a CUAD.
+        ;;Initialize the indices with the positions of the arrays and the
+        ;;table.
+        ldx #DATOS             ;Position of DATOS in X.
+        ldy #ENTERO            ;Position of ENTERO in Y.
+        pshy                   ;Push Y to switch context and also
+        ldy #CUAD              ;index CUAD with Y.
 
 SECUENCIA:
-        ;; Si CONT no ha alcanzado a CANT, y no se ha alcanzado el fin del DATOS,
-        ;; siga comparando.
+        ;; If CONT has not reached CANT, and the end of DATOS has not been reached,
+        ;; keep comparing.
         ldaa CONT
         cmpa CANT
         bhs RETORNO1
         cpx #DATOS+LONG
         bhs RETORNO1
 
-        ;; Si el número en DATOS no está en CUAD, proceda con el siguiente
-        ;; número.
+        ;; If the DATOS number is not in CUAD, proceed with the next
+        ;; number.
         cpy #CUAD+13
         bhs AUMENTAR_INDICE
 
-        ;; Búsqueda de coincidencias entre CUAD y DATOS.
+        ;; Search for matches between CUAD and DATOS.
 COMPARAR:
         ldaa 0,X
         cmpa 1,Y+
         bne SECUENCIA
 
 COINCIDENCIA:
-        ;;Se guardan los índices.
+        ;;Save the indices.
         pshy
         pshx
         psha
-        jsr  RAIZ          ;Calcula la raíz cuadrada de la coincidencia.
+        jsr  RAIZ          ;Compute the square root of the match.
 
-        ;;Se recargan los índices
+        ;;Reload the indices
         pula
         pulx
 
-        ;;Antes de recargar Y, se cambia de contexto para guardar el dato
-        ;;coincidente en pila.
+        ;;Before reloading Y, switch context to store the matching
+        ;;datum on the stack.
         leas 2,SP
         puly
         staa 1,Y+
-        pshy                    ;Se guarda el índica al siguiente valor en ENTERO.
+        pshy                    ;Save the index to the next value in ENTERO.
         leas -2,SP
 
-        puly                 ;Se recarga Y.
-        inc  CONT            ;Se incrementa el contador de coincidencias.
+        puly                 ;Reload Y.
+        inc  CONT            ;Increment the match counter.
 
 AUMENTAR_INDICE:
-        inx                    ;Se incrementan el indice de DATOS.
-        ldy  #CUAD             ;Se recarga el índice a CUAD para reinciar búsqueda.
-        bra  SECUENCIA         ;Se continúa con la búsqueda.
+        inx                    ;Increment the DATOS index.
+        ldy  #CUAD             ;Reload the CUAD index to restart the search.
+        bra  SECUENCIA         ;Continue the search.
 
 RETORNO1:
-        leas 2,SP        ;Se mueve el puntero de Pila para que apunte a la
-                         ;dirección de retorno.
-        rts              ;Seguir con secuencia del programa principal.
+        leas 2,SP        ;Move the stack pointer so it points to the
+                         ;return address.
+        rts              ;Continue with the main program sequence.
 
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-;             RAIZ CUADRADA CON ALG. ENTERO
+;             SQUARE ROOT WITH INTEGER ALGORITHM
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 RAIZ:
 
         leas 2,SP
-        pula                    ;Carga la coincidencia en A.
+        pula                    ;Load the match into A.
         sex A,D
-        std V                  ;Se define la variable V como "x".
-        movw V,R                ;Carga "x" a "r".
-        movw #$00,T             ;Carga 0 a "t".
+        std V                  ;Define variable V as "x".
+        movw V,R                ;Load "x" into "r".
+        movw #$00,T             ;Load 0 into "t".
 
 ALGORITMO:
         ldd T
-        cmpd R                  ;Si(r!=t): calcular raíz
+        cmpd R                  ;If(r!=t): compute root
         bne  CALCULO
 
-        ;;Se devuelve el valor de la raíz por la pila.
+        ;;Return the root value via the stack.
         ldd R
         tfr D,A
         psha
@@ -244,13 +244,13 @@ ALGORITMO:
         rts
 
 CALCULO:
-        movw R,T                ;Guardar valor de "r" en "t".
+        movw R,T                ;Save the value of "r" into "t".
 
-        ;;La división es D/X, por tanto se carga "x" en D y "r" en X
+        ;;The division is D/X, so "x" is loaded into D and "r" into X
         ldd  V
         ldx  R
 
-        idiv                    ;X = "x"/"r", D:resto
+        idiv                    ;X = "x"/"r", D:remainder
         ldd R                  ;B = "r"
         tfr D,B
         abx                     ;("x"/"r") + r
@@ -263,10 +263,10 @@ CALCULO:
 
 
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-;             IMPRESIÓN DE RESULTADO
+;             RESULT PRINTOUT
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Print_RESULT:
-        ;;Se imprime CONT y el respectivo mensaje en pantalla.
+        ;;Print CONT and the respective message on screen.
         ldb  CONT
         sex B,D
         pshd
@@ -275,7 +275,7 @@ Print_RESULT:
         jsr [PRINTF,X]
         leas 2,SP
 
-        ;;Impresión del último mensaje con todas las raices encontradas.
+        ;;Print the last message with all the roots found.
         ldx  #$00
         ldd  #MSG5
         jsr [PRINTF,X]
@@ -298,7 +298,7 @@ PRINT_OTHERS:
         bra PRINT_OTHERS
 
 
-        ;;La última impresión se toma como un caso especial.
+        ;;The last printout is handled as a special case.
 LAST_ONE:
         ldab A,Y
         sex B,D

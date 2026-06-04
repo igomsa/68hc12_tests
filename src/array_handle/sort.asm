@@ -1,31 +1,31 @@
 ; ******************************************************************************
-        ;; Tarea 2: Problema 1
+        ;; Assignment 2: Problem 1
 ; ******************************************************************************
 
 ; ******************************************************************************
-        ;; Este programa ordena el contenido de un arreglo de números con signo,
-        ;; diferentes de cero, cuya dirección se llama ORDENAR. Estos números,
-        ;; ordenados de menor a mayor, se copian en la dirección a un arreglo
-        ;; de dirección ORDENADOS. Si dos números son iguales, se copia solo uno de
-        ;; ellos. El arreglo ORDENAR puede ser borrado de ser necesario.
+        ;; This program sorts the contents of an array of nonzero signed
+        ;; numbers, whose address is named ORDENAR. These numbers,
+        ;; sorted from smallest to largest, are copied to an array
+        ;; at address ORDENADOS. If two numbers are equal, only one of
+        ;; them is copied. The ORDENAR array may be erased if needed.
 ; ******************************************************************************
 
 ; ******************************************************************************
-        ;; DECLARACIÓN DE ESTRUCTURAS DE ORDENAR
+        ;; ORDENAR DATA STRUCTURE DECLARATION
 
-        ;; SIZE: Variable que contiene la cantidad de números no ordenados. Es
-        ;; modificada en tiempo de ejecución, ya que la cantidad de números no
-        ;; ordenados varía con el transcurso del programa.
+        ;; SIZE: Variable holding the count of unsorted numbers. It is
+        ;; modified at runtime, since the count of unsorted numbers
+        ;; varies as the program runs.
 
-        ;; CANT: Constante que contiene el tamaño de ORDENAR, es decir la cantidad
-        ;; de números presentes en el arreglo al inicio del programa.
-        ;; Esta constante no es modificada en tiempo de ejecución pues a lo
-        ;; largo del programa el tamaño original de ORDENAR es invariante.
+        ;; CANT: Constant holding the size of ORDENAR, i.e. the count
+        ;; of numbers in the array at program start.
+        ;; This constant is not modified at runtime since
+        ;; the original size of ORDENAR stays invariant throughout.
 
-        ;; ORDENAR: Dirección de arreglo de números con signo, diferentes de cero, a ordenar.
+        ;; ORDENAR: Address of the array of nonzero signed numbers to sort.
 
-        ;; ORDENADOS: Dirección de arreglo de destino de números presentes en ORDENAR, ordenados
-        ;; de menor a mayor.
+        ;; ORDENADOS: Destination array address for the ORDENAR numbers, sorted
+        ;; from smallest to largest.
 ; ******************************************************************************
 
         org $1000
@@ -33,40 +33,40 @@ CANT:   ds 1
 
         org $1100
 ORDENAR:  db -03, 122, -24, 118, 113, 88, 122, 88, 100, 15
-        ;; En HEX:
+        ;; In HEX:
             ;fd, 7a,   e8, 76,  71,  58, 7a, 58, 64,  0f
 
-        ;; Ordenados
+        ;; Sorted
             ;-24, -03, 15, 88, 100, 113, 118, 122
-        ;; En HEX:
+        ;; In HEX:
             ; e8,  fd, 0f, 58, 64,  71,  76,  7a
 
         org $1120
 ORDENADOS:  ds 200
 
         org $1300
-SIZE:   ds 1                    ;Tamaño de arreglo sin ordenar
+SIZE:   ds 1                    ;Size of unsorted array
 EOA:    ds 2                    ;End of arrange
 ; ******************************************************************************
-        ;; INICIO DEL PROGRAMA
+        ;; PROGRAM START
 ; ******************************************************************************
         org $1500
 
-	;; lds #$3BFF              ; Carga puntero de pila.
+	;; lds #$3BFF              ; Load stack pointer.
 
-        ;; Se define el valor de CANT
+        ;; Set the value of CANT
         movb #$0a,CANT
 
-        ;; Se iguala el valor de SIZE al tamaño original del arreglo ORDENAR.
-        movb CANT,SIZE          ; Esto se hace porque inicialmente la cantidad de
-                                ; números que no se han ordenado es igual al
-                                ; número elementos de la tabla.
+        ;; Set SIZE equal to the original size of the ORDENAR array.
+        movb CANT,SIZE          ; This is done because initially the count of
+                                ; unsorted numbers equals the
+                                ; number of table elements.
 
-        ;; Necesario para inicializar arreglo de resultados en cero.
+        ;; Needed to initialize the result array to zero.
         ldx #ORDENADOS
         ldaa #200
 
-        ;; Se inicializa cada entrada del arreglo de resultados en cero.
+        ;; Each entry of the result array is initialized to zero.
 INIC_ORDENADOS:
         movb #00,1,X+
         dbeq A,INICIO:
@@ -78,55 +78,55 @@ INICIO:
         std EOA
         dec EOA+1
 
-        ;; Se cargan las direcciones de los arreglos en los índices.
+        ;; Load the array addresses into the index registers.
         ldx #ORDENAR              ; X <-- ORDENAR
         ldy #ORDENADOS            ; Y <-- ORDENADOS
 
 
-        movb 0,X,0,Y            ; El primer número de SERIE se asume como el mayor.
+        movb 0,X,0,Y            ; The first number of the series is assumed the largest.
 
 ; ******************************************************************************
         ;; ALGORITMO
 
-        ;; El algoritmo recorre todo el arreglo en búsqueda de un número menor
-        ;; que el primer elemento de la tabla, en caso de que se encuentre un
-        ;; número menor, este se cambia de posición con el primer elemento de la
-        ;; tabla.
+        ;; The algorithm scans the whole array for a number smaller
+        ;; than the first element of the table; if a smaller
+        ;; number is found, it is swapped with the first element of the
+        ;; table.
 
-        ;; En caso de que no haya ningún número menor que el primero,
-        ;; se copia el primer número a ORDENADOS y se incrementa la posición del
-        ;; índice al que apuntan tanto el "nuevo número menor" de ORDENAR
-        ;; (índice X) como la siguiente posición a la que se enviará dicho
-        ;; nuevo número en ORDENADOS (índice Y). Seguidamente se reduce SIZE.
+        ;; If there is no number smaller than the first,
+        ;; the first number is copied to ORDENADOS and the position of the
+        ;; index pointing to the "new smallest number" of ORDENAR
+        ;; (index X) and the next position where that number will be sent
+        ;; in ORDENADOS (index Y) are both incremented. Then SIZE is reduced.
 
-        ;; Si se encuentra un número repetido, se incrementa el puntero del arreglo
-        ;; ()X+1) y se reduce SIZE.
+        ;; If a repeated number is found, the array pointer is incremented
+        ;; (X+1) and SIZE is reduced.
 ; ******************************************************************************
 
-        ;; Cuando se ha recorrido todo ORDENAR y ya no hay números menores
-        ;; que el primer elemento, el registro B, que se usa como offset
-        ;; (X+B) para referenciar al número a comparar con el "número menor",
-        ;; vuelve a cero.
+        ;; When all of ORDENAR has been scanned and there are no numbers smaller
+        ;; than the first element, register B, used as offset
+        ;; (X+B) to reference the number compared with the "smallest number",
+        ;; returns to zero.
 REINICIO:
         ldab #$00
 
 CONTINUE:
-        cpx EOA                 ; Si X apunta al final del vector de ORDENAR
-        bge FINAL               ; finalice el programa.
+        cpx EOA                 ; If X points to the end of the ORDENAR vector
+        bge FINAL               ; finish the program.
 
-        incb                    ; Si no, incremente B y si es mayor que
-        cmpb SIZE               ; la cantidad de números no ordenados, reduzca
-        bge REDUCE_ARRAY        ; SIZE e incremente los punteros.
+        incb                    ; Otherwise, increment B and if greater than
+        cmpb SIZE               ; the count of unsorted numbers, reduce
+        bge REDUCE_ARRAY        ; SIZE and increment the pointers.
 
-        lda 0,X                 ; Carga el primer elemento del arreglo en A
-                                ; y se define como pivote ("número menor").
+        lda 0,X                 ; Load the first array element into A
+                                ; and define it as pivot ("smallest number").
 
-        cmpa B,X                ; Compare el pivote con otro número de ORDENAR
+        cmpa B,X                ; Compare the pivot with another ORDENAR number
         blt PIV_ES_MENOR
         beq IGUAL
 
-        ;; Si pivote es mayor, cambie de posición el pivote con el número en
-        ;; comparación.
+        ;; If the pivot is greater, swap the pivot with the number being
+        ;; compared.
 PIV_ES_MAYOR:
         lda 0,X
         movb B,X,0,Y
@@ -134,26 +134,26 @@ PIV_ES_MAYOR:
         staa B,X
         bra CONTINUE
 
-        ;; Si el pivote es menor, compare con el siguiente número
+        ;; If the pivot is smaller, compare with the next number
 PIV_ES_MENOR:
         bra CONTINUE
 
-        ;; Si es igual, se incrementa el puntero a pivote y con esto se elimina
-        ;; el número repetido.
+        ;; If equal, the pivot pointer is incremented, removing
+        ;; the repeated number.
 IGUAL:
         inx
         dec SIZE
         bra CONTINUE
 
-        ;; Cuando se haya comparado el pivote con todo el arreglo, reduzca
-        ;; SIZE (tamaño de números sin ordenar) e incremente los punteros.
+        ;; Once the pivot has been compared with the whole array, reduce
+        ;; SIZE (count of unsorted numbers) and increment the pointers.
 REDUCE_ARRAY:
         dec SIZE
         inx
         iny
         bra REINICIO
 
-        ;; Al finalizar, copie el último elemento al final de ORDENADOS.
+        ;; At the end, copy the last element to the end of ORDENADOS.
 FINAL:
         movb 0,X,0,Y
         bra *

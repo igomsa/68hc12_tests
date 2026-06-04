@@ -1,20 +1,20 @@
 ; ******************************************************************************
-        ;; Tarea 2: Problema 3
+        ;; Assignment 2: Problem 3
 ; ******************************************************************************
 
 ; ******************************************************************************
-        ;; Este programa busca números divisibles por 4, en un arreglo de
-        ;; números de 1B con signo, de tamaño variable L, llamado DATOS. Los
-        ;; números divisibles por 4 son copiados a otro arreglo llamado DIV4
-        ;; La cantidad de números divisibles por 4 se almacena en la variable
+        ;; This program finds numbers divisible by 4 in an array of
+        ;; signed 1B numbers, of variable size L, called DATOS. The
+        ;; numbers divisible by 4 are copied to another array called DIV4.
+        ;; The count of numbers divisible by 4 is stored in the variable
         ;; CANT4.
 ; ******************************************************************************
 
 ; ******************************************************************************
-        ;; DECLARACIÓN DE ESTRUCTURAS DE DATOS
-        ;; DATOS: Arreglo con números con signo de 1B.
-        ;; DIV4: Contendrá los números de DATOS  que son divisibles por 4.
-        ;; L: Tamaño de DATOS.
+        ;; DATA STRUCTURE DECLARATION
+        ;; DATOS: Array of signed 1B numbers.
+        ;; DIV4: Holds the DATOS numbers that are divisible by 4.
+        ;; L: Size of DATOS.
 ; ******************************************************************************
 
         org $1000
@@ -32,26 +32,26 @@ DIV4:   ds 1
 
 
 ; ******************************************************************************
-        ;; INICIO DEL PROGRAMA
+        ;; PROGRAM START
 ; ******************************************************************************
 
         org $1300
-        lds #$3BFF              ; Carga puntero de pila.
+        lds #$3BFF              ; Load stack pointer.
 
-        ;; Se cargan las direcciones de los arreglos en los índices.
+        ;; Load the array addresses into the index registers.
         ldx #DATOS              ; X <-- DATOS
         ldy #DIV4               ; Y <-- DIV4
 
-        ;; Limpie los registros A y B, y el contenido de la variable CANT4.
+        ;; Clear registers A and B, and the contents of CANT4.
         ldaa #$00
         ldab #$00
         movb #00,CANT4
-        psha                    ; El registro A se usará tanto para recorrer
-                                ; DATOS como para guardar los números divisibles
-                                ; por 4 en DIV4. Por ello se emplea la pila.
+        psha                    ; Register A is used both to walk DATOS
+                                ; and to store the numbers divisible
+                                ; by 4 in DIV4. Hence the stack is used.
 
-        ;; Si se llegó al final de DATOS, finalice el programa. Si no, cargue un
-        ;; número de DATOS en A y revise si el contenido es positivo o negativo.
+        ;; If the end of DATOS is reached, finish. Otherwise, load a
+        ;; DATOS number into A and check whether it is positive or negative.
 SIGUIENTE:
         cmpb #DATOS+L
         bhs FIN
@@ -59,22 +59,22 @@ SIGUIENTE:
         tsta
         bgt POSITIVO
 
-        ;; Si el número es negativo, relice su complemento a dos.
+        ;; If the number is negative, take its two's complement.
 NEGATIVO:
         nega
 
-        ;; Si es positivo, revise si los primeros dos LSBs del número son cero
-        ;; (número divisible por 4). Si no lo son, prosiga con el siguiente
-        ;; número.
+        ;; If positive, check whether the two LSBs of the number are zero
+        ;; (number divisible by 4). If not, continue with the next
+        ;; number.
 POSITIVO:
         anda #$03
         tsta
         bne AVANZAR
 
-        ;; Si los dos primeros LSBs son cero, el número es divisible por 4,
-        ;; entonces desapile el offset para la posición de memoria de DIV4 y
-        ;; guarde el número en dicho arreglo. Seguidamente incremente el valor
-        ;; del offset para DIV4 y apile ese valor.
+        ;; If the two LSBs are zero, the number is divisible by 4,
+        ;; so pull the offset for the DIV4 memory position and
+        ;; store the number in that array. Then increment the
+        ;; DIV4 offset and push that value.
 DIVISIBLE:
         pula
         movb b,X,a,Y
@@ -82,11 +82,11 @@ DIVISIBLE:
         psha
         inc CANT4
 
-        ;; Para seguir con otro número, aumente el valor del registro B.
+        ;; To move to another number, increase register B.
 AVANZAR:
         incb
         bra SIGUIENTE
 
-        ;; Fin del programa
+        ;; End of program
 FIN:
         bra *
